@@ -273,7 +273,18 @@ app.get('/api/analytics', async (_req, res) => {
 const distPath = path.join(__dirname, '..', 'dist');
 app.use(express.static(distPath));
 app.get('/{*splat}', (_req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
+  const indexFile = path.join(distPath, 'index.html');
+  res.sendFile(indexFile, (err) => {
+    if (err) {
+      res.status(500).send('Server starting up...');
+    }
+  });
+});
+
+// ─── Global Error Handler ─────────────────────────────────────────────────────
+app.use((err: any, _req: any, res: any, _next: any) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
