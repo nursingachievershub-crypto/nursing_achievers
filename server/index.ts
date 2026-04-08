@@ -2,10 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import path from 'path';
+import http from 'http';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
-// Load .env only if it exists (not on Render)
-try { const dotenv = await import('dotenv'); dotenv.config(); } catch {}
+dotenv.config();
 
 import {
   User, Course, Video, Note, Quiz, QuizResult, Payment, Enrollment
@@ -290,7 +291,7 @@ app.use((err: any, _req: any, res: any, _next: any) => {
 });
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
-const HOST = '0.0.0.0';
-app.listen(Number(PORT), HOST, () => {
-  console.log(`🚀 Server running on ${HOST}:${PORT}`);
+const server = http.createServer(app);
+server.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`🚀 Server running on 0.0.0.0:${PORT}`);
 });
