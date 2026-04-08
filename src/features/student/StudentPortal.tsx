@@ -124,8 +124,17 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
   const [activeNav, setActiveNav]     = useState('Courses');
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [hoveredNav, setHoveredNav]   = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
   const [courses, setCourses] = useState<any[]>(defaultCourses);
+
+  // Filter courses by search query
+  const filteredCourses = courses.filter(c =>
+    !searchQuery.trim() ||
+    c.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.category?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Fetch courses from MongoDB API (fallback to defaults)
   useEffect(() => {
@@ -322,11 +331,12 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
               </svg>
               <input
                 placeholder="Search courses…"
-                readOnly
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
                 style={{
                   paddingLeft: '36px', paddingRight: '16px', paddingTop: '9px', paddingBottom: '9px',
                   background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px',
-                  fontSize: '13px', color: '#94a3b8', outline: 'none', width: '180px',
+                  fontSize: '13px', color: '#0f172a', outline: 'none', width: '220px',
                   boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                 }}
                 className="header-search"
@@ -418,12 +428,12 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
               {/* COURSES HEADER ROW */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>Available Courses</h3>
-                <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '500', background: '#f1f5f9', padding: '4px 12px', borderRadius: '20px' }}>{courses.length} courses</span>
+                <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '500', background: '#f1f5f9', padding: '4px 12px', borderRadius: '20px' }}>{filteredCourses.length} courses</span>
               </div>
 
               {/* COURSE CARDS */}
               <div className="course-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
-                {courses.map((course, index) => (
+                {filteredCourses.map((course, index) => (
                   <div
                     key={index}
                     onMouseEnter={() => setHoveredCard(index)}
