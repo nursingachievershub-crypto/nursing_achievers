@@ -7,6 +7,7 @@ import { useVideos } from '../../hooks/useVideos';
 import { useNotes } from '../../hooks/useNotes';
 import { useQuizzes } from '../../hooks/useQuizzes';
 import { useAnalytics } from '../../hooks/useAnalytics';
+import { defaultCourses } from './defaultCourses';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Course {
@@ -66,10 +67,11 @@ interface QuizQuestion {
   topicType: string;
   options: string[];
   answer: number;
+  explanation?: string;
 }
 
 const QUIZ_LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'All Levels'];
-const emptyQ = (): QuizQuestion => ({ id: `q-${Date.now()}-${Math.random().toString(36).slice(2)}`, questionText: '', questionCode: '', topicType: '', options: ['', '', '', ''], answer: 0 });
+const emptyQ = (): QuizQuestion => ({ id: `q-${Date.now()}-${Math.random().toString(36).slice(2)}`, questionText: '', questionCode: '', topicType: '', options: ['', '', '', ''], answer: 0, explanation: '' });
 
 // ─── Default Data (legacy - students will be migrated to DB) ──────────────────
 
@@ -214,16 +216,36 @@ export const AdminDashboard = () => {
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target?.result as string);
-        if (!data.title || !Array.isArray(data.questions)) throw new Error('Invalid: missing "title" or "questions" array.');
-        const questions: QuizQuestion[] = data.questions.map((q: Record<string, unknown>, i: number) => ({
+        // Robustly support both array and object quiz formats
+        let questionsRaw: any[] = [];
+        let quizTitle = '';
+        let quizLevel = '';
+        if (Array.isArray(data)) {
+          questionsRaw = data;
+        } else if (typeof data === 'object' && data !== null && Array.isArray(data.questions)) {
+          questionsRaw = data.questions;
+          quizTitle = typeof data.title === 'string' ? data.title : '';
+          quizLevel = typeof data.level === 'string' ? data.level : '';
+        } else {
+          throw new Error('Invalid quiz format: must be an array or object with questions array.');
+        }
+        if (!questionsRaw.length) throw new Error('No questions found in JSON.');
+        // Normalize all questions
+        const questions: QuizQuestion[] = questionsRaw.map((q: Record<string, unknown>, i: number) => ({
           id: `json-${i}`,
-          questionText: String(q.question || ''),
-          questionCode: String(q.questionCode || ''),
-          topicType:    String(q.questionLanguage || ''),
-          options:      Array.isArray(q.options) ? q.options.map(String) : ['', '', '', ''],
-          answer:       typeof q.answer === 'number' ? q.answer : 0,
+          questionText: typeof q.questionText === 'string' ? q.questionText : String(q.question || ''),
+          questionCode: typeof q.questionCode === 'string' ? q.questionCode : '',
+          topicType: typeof q.topicType === 'string' ? q.topicType : '',
+          options: Array.isArray(q.options) ? q.options.map(String) : ['', '', '', ''],
+          answer: typeof q.correct_index === 'number' ? q.correct_index : (typeof q.answer === 'number' ? q.answer : 0),
+          explanation: typeof q.explanation === 'string' ? q.explanation : '',
         }));
-        setQuizForm(f => ({ ...f, title: String(data.title), level: String(data.level || 'Beginner'), topic: String(data.topic || ''), questions }));
+        setQuizForm(f => ({
+          ...f,
+          title: quizTitle || f.title,
+          level: quizLevel || f.level,
+          questions
+        }));
         setJsonError('');
       } catch (err: unknown) {
         setJsonError(err instanceof Error ? err.message : 'Invalid JSON format.');
@@ -394,30 +416,36 @@ export const AdminDashboard = () => {
               <div>
                 <button onClick={() => { setEditingCourse(null); setCourseForm(emptyCourse); setShowCourseModal(true); }} style={addBtn}>+ Add Course</button>
                 <div style={gridStyle}>
-                  {courses.map((c) => (
-                    <div key={c._id || c.id} style={{ ...cardStyle, cursor: 'pointer' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                        <span style={{ backgroundColor: c.badgeColor + '20', color: c.badgeColor, padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700' }}>{c.badge}</span>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button onClick={(e) => { e.stopPropagation(); handleEditCourse(c); }} style={editBtn}>Edit</button>
-                          <button onClick={async (e) => { e.stopPropagation(); try { await deleteCourse(c._id || c.id); } catch(err) { console.error(err); } }} style={deleteBtn}>Delete</button>
+                  {(courses.length > 0 ? courses : defaultCourses).map((c, idx) => {
+                    const isDemo = !c._id && !c.id;
+                    return (
+                      <div key={c._id || c.id || idx} style={{ ...cardStyle, cursor: 'pointer' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                          <span style={{ backgroundColor: c.badgeColor + '20', color: c.badgeColor, padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700' }}>{c.badge}</span>
+                          {!isDemo && (
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <button onClick={(e) => { e.stopPropagation(); handleEditCourse(c); }} style={editBtn}>Edit</button>
+                              <button onClick={async (e) => { e.stopPropagation(); try { await deleteCourse(c._id || c.id); } catch(err) { console.error(err); } }} style={deleteBtn}>Delete</button>
+                            </div>
+                          )}
                         </div>
+                        <h4 style={{ margin: '0 0 6px', fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>{c.title}</h4>
+                        <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#64748b' }}>{c.description}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                          <span style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b' }}>₹{c.price.toLocaleString()}</span>
+                          {c.price < c.originalPrice && <span style={{ fontSize: '12px', color: '#94a3b8', textDecoration: 'line-through' }}>₹{c.originalPrice.toLocaleString()}</span>}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '14px' }}>{c.lectures} lectures · {c.hours}h · {c.level}</div>
+                        <button
+                          onClick={() => setSelectedCourse(c)}
+                          style={{ width: '100%', padding: '9px', background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '8px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
+                        >
+                          View Curriculum →
+                        </button>
+                        {isDemo && <div style={{marginTop:8, fontSize:11, color:'#64748b'}}>Demo course (DB is empty)</div>}
                       </div>
-                      <h4 style={{ margin: '0 0 6px', fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>{c.title}</h4>
-                      <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#64748b' }}>{c.description}</p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                        <span style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b' }}>₹{c.price.toLocaleString()}</span>
-                        {c.price < c.originalPrice && <span style={{ fontSize: '12px', color: '#94a3b8', textDecoration: 'line-through' }}>₹{c.originalPrice.toLocaleString()}</span>}
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '14px' }}>{c.lectures} lectures · {c.hours}h · {c.level}</div>
-                      <button
-                        onClick={() => setSelectedCourse(c)}
-                        style={{ width: '100%', padding: '9px', background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '8px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
-                      >
-                        View Curriculum →
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ) : (
@@ -1145,6 +1173,16 @@ export const AdminDashboard = () => {
                         <button onClick={() => removeQuestion(qi)} style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#ef4444', borderRadius: '6px', fontSize: '12px', fontWeight: '600', padding: '4px 10px', cursor: 'pointer' }}>✕ Remove</button>
                       )}
                     </div>
+                        {/* (vi) Explanation (optional) */}
+                        <div style={{ marginBottom: '10px' }}>
+                          <label style={labelStyle}>Explanation <span style={{ color: '#94a3b8', fontWeight: '400' }}>(optional, shown after answer)</span></label>
+                          <textarea
+                            placeholder="Enter explanation for this question (optional)"
+                            value={q.explanation || ''}
+                            onChange={e => updateQuestion(qi, 'explanation', e.target.value)}
+                            style={{ ...inputStyle, minHeight: '48px', resize: 'vertical' }}
+                          />
+                        </div>
 
                     {/* (ii) Question Text */}
                     <div style={{ marginBottom: '10px' }}>
