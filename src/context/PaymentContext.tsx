@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { paymentsAPI } from '../api/client';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface PaymentRequest {
@@ -34,8 +35,8 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const refreshPayments = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/payments');
-      if (res.ok) setPayments(await res.json());
+      const data = await paymentsAPI.getAll();
+      setPayments(data);
     } catch { /* API not available */ }
     finally { setLoading(false); }
   }, []);
@@ -43,26 +44,21 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => { refreshPayments(); }, [refreshPayments]);
 
   const submitPayment = async (p: Omit<PaymentRequest, '_id' | 'id' | 'status' | 'submittedAt' | 'createdAt'>) => {
-    const res = await fetch('/api/payments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...p, status: 'pending' }),
-    });
-    if (res.ok) {
-      const newPayment = await res.json();
+    try {
+      const newPayment = await paymentsAPI.create({ ...p, status: 'pending' });
       setPayments(prev => [newPayment, ...prev]);
+    } catch (err) {
+      console.error('Payment submission failed:', err);
+      throw err;
     }
   };
 
   const updatePaymentStatus = async (id: string, status: 'approved' | 'rejected') => {
-    const res = await fetch(`/api/payments/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    if (res.ok) {
-      const updated = await res.json();
+    try {
+      const updated = await paymentsAPI.update(id, { status });
       setPayments(prev => prev.map(p => (p._id === id ? updated : p)));
+    } catch (err) {
+      console.error('Failed to update payment status:', err);
     }
   };
 

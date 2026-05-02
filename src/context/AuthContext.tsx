@@ -55,13 +55,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         avatar: u.picture,
         loginType: ADMIN_EMAILS.includes(u.email.toLowerCase()) ? 'admin' : 'google',
       }),
-    }).catch(() => {});
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.token) localStorage.setItem('na_token', data.token);
+      })
+      .catch(err => console.error('Failed to sync auth/get token:', err));
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem('isAdmin');
+    localStorage.removeItem('na_token');
   };
 
   return (

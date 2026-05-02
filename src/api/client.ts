@@ -1,8 +1,13 @@
 const API_BASE = '/api';
 
 async function request(path: string, options?: RequestInit) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const token = localStorage.getItem('na_token');
+  
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     ...options,
   });
   if (!res.ok) {
@@ -41,6 +46,11 @@ export const quizzesAPI = {
   create:  (data: any)        => request('/quizzes', { method: 'POST', body: JSON.stringify(data) }),
   submit:  (data: any)        => request('/quizzes?action=submit', { method: 'POST', body: JSON.stringify(data) }),
   delete:  (id: string)       => request(`/quizzes/${id}`, { method: 'DELETE' }),
+};
+
+// ─── Students ─────────────────────────────────────────────────────────────────
+export const studentsAPI = {
+  getAll:  () => request('/students'),
 };
 
 // ─── Payments ─────────────────────────────────────────────────────────────────

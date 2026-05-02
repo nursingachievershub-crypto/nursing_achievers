@@ -125,8 +125,17 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [hoveredNav, setHoveredNav]   = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth <= 768);
   const [courses, setCourses] = useState<any[]>(defaultCourses);
+
+  // Handle window resize for mobile responsiveness
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Filter courses by search query
   const filteredCourses = courses.filter(c =>
@@ -153,7 +162,9 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
           reviews: c.reviews || Math.floor(500 + Math.random() * 1000),
         })));
       }
-    }).catch(() => {});
+    }).catch((error) => {
+      console.error("Failed to load courses:", error);
+    });
   }, []);
 
   const handleSignOut = () => { logout(); navigate('/'); };

@@ -5,6 +5,7 @@ import path from 'path';
 import http from 'http';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const JWT_SECRET = process.env.JWT_SECRET || 'nursing_achievers_secret_key';
 
 console.log(`[startup] PORT=${PORT}, MONGODB_URI=${process.env.MONGODB_URI ? 'SET (' + process.env.MONGODB_URI.substring(0, 30) + '...)' : 'NOT SET'}`);
 
@@ -36,6 +38,21 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
 });
 
+// ─── Security Middleware ──────────────────────────────────────────────────────
+const requireAdmin = (req: any, res: any, next: any) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Unauthorized: No token provided' });
+    
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    if (decoded.loginType !== 'admin') return res.status(403).json({ error: 'Forbidden: Admins only' });
+    
+    next();
+  } catch (err) {
+    res.status(401).json({ error: 'Unauthorized: Invalid token' });
+  }
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // AUTH ROUTES
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -48,7 +65,8 @@ app.post('/api/auth', async (req, res) => {
       { email: email.toLowerCase(), name, avatar, loginType },
       { upsert: true, new: true }
     );
-    res.json(user);
+    const token = jwt.sign({ email: user.email, loginType: user.loginType }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ user, token });
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
@@ -63,6 +81,27 @@ app.get('/api/auth', async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// STUDENTS ROUTES
+// ═══════════════════════════════════════════════════════════════════════════════
+app.get('/api/students', requireAdmin, async (_req, res) => {
+  try {
+    const users = await User.find().sort({ createdAt: -1 }).lean();
+    const enrollments = await Enrollment.find().lean();
+
+    // Map users to include their enrolled courses
+    const studentsData = users.map((user: any) => {
+      const userEnrollments = (enrollments as any[]).filter(e => e.userEmail === user.email);
+      return {
+        ...user,
+        enrolledCourses: userEnrollments.map(e => e.courseId)
+      };
+    });
+
+    res.json(studentsData);
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // COURSES ROUTES
 // ═══════════════════════════════════════════════════════════════════════════════
 app.get('/api/courses', async (_req, res) => {
@@ -72,7 +111,7 @@ app.get('/api/courses', async (_req, res) => {
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/courses', async (req, res) => {
+app.post('/api/courses', requireAdmin, async (req, res) => {
   try {
     const course = await Course.create(req.body);
     res.status(201).json(course);
@@ -87,7 +126,7 @@ app.get('/api/courses/:id', async (req, res) => {
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/courses/:id', async (req, res) => {
+app.put('/api/courses/:id', requireAdmin, async (req, res) => {
   try {
     const course = await Course.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!course) return res.status(404).json({ error: 'Course not found' });
@@ -95,7 +134,7 @@ app.put('/api/courses/:id', async (req, res) => {
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/courses/:id', async (req, res) => {
+app.delete('/api/courses/:id', requireAdmin, async (req, res) => {
   try {
     await Course.findByIdAndDelete(req.params.id);
     res.json({ success: true });
@@ -113,14 +152,14 @@ app.get('/api/videos', async (req, res) => {
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/videos', async (req, res) => {
+app.post('/api/videos', requireAdmin, async (req, res) => {
   try {
     const video = await Video.create(req.body);
     res.status(201).json(video);
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/videos/:id', async (req, res) => {
+app.delete('/api/videos/:id', requireAdmin, async (req, res) => {
   try {
     await Video.findByIdAndDelete(req.params.id);
     res.json({ success: true });
@@ -138,14 +177,14 @@ app.get('/api/notes', async (req, res) => {
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/notes', async (req, res) => {
+app.post('/api/notes', requireAdmin, async (req, res) => {
   try {
     const note = await Note.create(req.body);
     res.status(201).json(note);
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/notes/:id', async (req, res) => {
+app.delete('/api/notes/:id', requireAdmin, async (req, res) => {
   try {
     await Note.findByIdAndDelete(req.params.id);
     res.json({ success: true });
@@ -183,13 +222,19 @@ app.post('/api/quizzes', async (req, res) => {
       return res.status(201).json(result);
     }
 
+      // Create quiz (Admin only check)
+      const token = req.headers.authorization?.split(' ')[1];
+      if (!token) return res.status(401).json({ error: 'Unauthorized: No token provided' });
+      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      if (decoded.loginType !== 'admin') return res.status(403).json({ error: 'Forbidden: Admins only' });
+
     // Create quiz
     const quiz = await Quiz.create(req.body);
     res.status(201).json(quiz);
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/quizzes/:id', async (req, res) => {
+app.delete('/api/quizzes/:id', requireAdmin, async (req, res) => {
   try {
     await Quiz.findByIdAndDelete(req.params.id);
     res.json({ success: true });
@@ -214,7 +259,7 @@ app.post('/api/payments', async (req, res) => {
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
-app.patch('/api/payments/:id', async (req, res) => {
+app.patch('/api/payments/:id', requireAdmin, async (req, res) => {
   try {
     const { status } = req.body;
     const update: any = { status };
@@ -244,7 +289,7 @@ app.patch('/api/payments/:id', async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ANALYTICS ROUTES
 // ═══════════════════════════════════════════════════════════════════════════════
-app.get('/api/analytics', async (_req, res) => {
+app.get('/api/analytics', requireAdmin, async (_req, res) => {
   try {
     const [totalStudents, totalCourses, totalVideos, totalQuizzes, totalNotes, payments, enrollments] = await Promise.all([
       User.countDocuments(),

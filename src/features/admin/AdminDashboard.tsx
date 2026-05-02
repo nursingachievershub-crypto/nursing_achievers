@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { usePayments } from '../../context/PaymentContext';
@@ -7,6 +7,7 @@ import { useVideos } from '../../hooks/useVideos';
 import { useNotes } from '../../hooks/useNotes';
 import { useQuizzes } from '../../hooks/useQuizzes';
 import { useAnalytics } from '../../hooks/useAnalytics';
+import { studentsAPI } from '../../api/client';
 import { defaultCourses } from './defaultCourses';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -73,13 +74,7 @@ interface QuizQuestion {
 const QUIZ_LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'All Levels'];
 const emptyQ = (): QuizQuestion => ({ id: `q-${Date.now()}-${Math.random().toString(36).slice(2)}`, questionText: '', questionCode: '', topicType: '', options: ['', '', '', ''], answer: 0, explanation: '' });
 
-// ─── Default Data (legacy - students will be migrated to DB) ──────────────────
 
-const defaultStudents: Student[] = [
-  { id: '1', name: 'Priya Sharma', email: 'priya@email.com', course: "ACHIEVERS'S PRIME: NORCET11", amount: 10000, date: '2026-03-20', status: 'approved' },
-  { id: '2', name: 'Rahul Verma', email: 'rahul@email.com', course: 'ACHIEVERS HUB: NORCET 11', amount: 13000, date: '2026-03-25', status: 'pending' },
-  { id: '3', name: 'Anjali Singh', email: 'anjali@email.com', course: 'MEDICAL SURGICAL NURSING', amount: 8000, date: '2026-03-27', status: 'pending' },
-];
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
 const Icons = {
@@ -111,8 +106,15 @@ export const AdminDashboard = () => {
   const { payments, updatePaymentStatus } = usePayments();
   const [activeTab, setActiveTab]   = useState('Dashboard');
   const [previewScreenshot, setPreviewScreenshot] = useState<string | null>(null);
-  const [isNavOpen, setIsNavOpen]   = useState(window.innerWidth > 768);
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isNavOpen, setIsNavOpen]   = useState(!isMobile);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleTabClick = (label: string) => {
     setActiveTab(label);
     if (isMobile) setIsNavOpen(false);
@@ -126,8 +128,24 @@ export const AdminDashboard = () => {
   const { quizzes, addQuiz } = useQuizzes();
   const { analytics } = useAnalytics();
 
-  // Legacy local state (kept for backward compat during migration)
-  const [students,    setStudents]    = useState<Student[]>(defaultStudents);
+  // Compute derived recent enrollments from actual payments for the dashboard table
+  const recentEnrollments: Student[] = payments.map(p => ({
+    id: p._id || p.id || '',
+    name: p.studentName,
+    email: p.studentEmail,
+    course: p.courses?.map(c => c.title).join(', ') || 'N/A',
+    amount: p.total,
+    date: new Date(p.createdAt || Date.now()).toLocaleDateString('en-IN'),
+    status: p.status
+  }));
+
+  const [realStudents, setRealStudents] = useState<any[]>([]);
+  useEffect(() => {
+    studentsAPI.getAll()
+      .then(data => setRealStudents(data))
+      .catch(err => console.error('Failed to load students:', err));
+  }, [payments]);
+
   const [quizMode,  setQuizMode]  = useState<'manual' | 'json'>('manual');
   const [jsonError, setJsonError] = useState('');
   const [quizForm,  setQuizForm]  = useState<{ title: string; level: string; topic: string; course: string; questions: QuizQuestion[] }>({ title: '', level: 'Beginner', topic: '', course: '', questions: [emptyQ()] });
@@ -146,14 +164,11 @@ export const AdminDashboard = () => {
   const [videoForm,      setVideoForm]      = useState({ title: '', course: '', url: '', description: '', category: '', videoType: 'Full Lecture' });
   const [noteForm,       setNoteForm]       = useState({ title: '', description: '', course: '', price: '', fileName: '', docType: 'Study Notes', fileSize: '', fileUrl: '' });
 
-  // Computed - use API analytics when available, fallback to local calculation
   const totalRevenue = analytics?.overview?.totalRevenue
-    ?? (payments.filter(p => p.status === 'approved').reduce((sum, p) => sum + p.total, 0)
-    + students.filter(s => s.status === 'approved').reduce((sum, s) => sum + s.amount, 0));
+    ?? payments.filter(p => p.status === 'approved').reduce((sum, p) => sum + p.total, 0);
   const pendingCount = analytics?.overview?.pendingPayments
-    ?? (payments.filter(p => p.status === 'pending').length
-    + students.filter(s => s.status === 'pending').length);
-  const totalStudents = analytics?.overview?.totalStudents ?? students.length;
+    ?? payments.filter(p => p.status === 'pending').length;
+  const totalStudents = analytics?.overview?.totalStudents ?? realStudents.length;
 
   // ── Handlers ──
   const handleSaveCourse = async () => {
@@ -264,8 +279,9 @@ export const AdminDashboard = () => {
     resetQuizForm();
   };
 
-  const handlePayment = (id: string, action: 'approved' | 'rejected') =>
-    setStudents(students.map(s => s.id === id ? { ...s, status: action } : s));
+  const handlePayment = (id: string, action: 'approved' | 'rejected') => {
+    updatePaymentStatus(id, action);
+  };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc', fontFamily: "'Inter', sans-serif" }}>
@@ -394,7 +410,7 @@ export const AdminDashboard = () => {
             <div style={tableCardStyle}>
               <h3 style={{ margin: '0 0 20px', fontSize: '15px', fontWeight: '700', color: '#1e293b' }}>Recent Enrollments</h3>
               <Table headers={['Student', 'Course', 'Amount', 'Date', 'Status']}>
-                {students.map((s) => (
+                {recentEnrollments.map((s) => (
                   <tr key={s.id} style={{ borderTop: '1px solid #f1f5f9' }}>
                     <td style={td}><div style={{ fontWeight: '600', color: '#1e293b' }}>{s.name}</div><div style={{ fontSize: '12px', color: '#94a3b8' }}>{s.email}</div></td>
                     <td style={{ ...td, fontSize: '12px', color: '#64748b' }}>{s.course}</td>
@@ -665,15 +681,19 @@ export const AdminDashboard = () => {
         {/* ── STUDENTS ── */}
         {activeTab === 'Students' && (
           <div style={tableCardStyle}>
-            <Table headers={['Student', 'Email', 'Course', 'Amount', 'Date', 'Status']}>
-              {students.map((s) => (
-                <tr key={s.id} style={{ borderTop: '1px solid #f1f5f9' }}>
+            <Table headers={['Student Name', 'Email', 'Login Type', 'Enrolled Courses']}>
+              {realStudents.map((s, i) => (
+                <tr key={s._id || i} style={{ borderTop: '1px solid #f1f5f9' }}>
                   <td style={td}><span style={{ fontWeight: '600', color: '#1e293b' }}>{s.name}</span></td>
                   <td style={{ ...td, color: '#64748b' }}>{s.email}</td>
-                  <td style={{ ...td, fontSize: '12px', color: '#64748b' }}>{s.course}</td>
-                  <td style={td}>₹{s.amount.toLocaleString()}</td>
-                  <td style={{ ...td, color: '#94a3b8', fontSize: '12px' }}>{s.date}</td>
-                  <td style={td}><StatusBadge status={s.status} /></td>
+                  <td style={td}>
+                    <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', backgroundColor: '#eff6ff', color: '#2563eb' }}>
+                      {s.loginType || 'Google'}
+                    </span>
+                  </td>
+                  <td style={{ ...td, fontSize: '12px', color: '#64748b' }}>
+                    {s.enrolledCourses?.length > 0 ? s.enrolledCourses.join(', ') : 'No Active Courses'}
+                  </td>
                 </tr>
               ))}
             </Table>
@@ -761,7 +781,7 @@ export const AdminDashboard = () => {
             <div style={tableCardStyle}>
               <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b', margin: '0 0 14px', padding: '0 4px' }}>Payment Records</h3>
               <Table headers={['Student', 'Course', 'Amount', 'Date', 'Status', 'Action']}>
-                {students.map((s) => (
+                {recentEnrollments.map((s) => (
                   <tr key={s.id} style={{ borderTop: '1px solid #f1f5f9' }}>
                     <td style={td}><div style={{ fontWeight: '600', color: '#1e293b' }}>{s.name}</div><div style={{ fontSize: '12px', color: '#94a3b8' }}>{s.email}</div></td>
                     <td style={{ ...td, fontSize: '12px', color: '#64748b' }}>{s.course}</td>
@@ -781,7 +801,7 @@ export const AdminDashboard = () => {
               </Table>
             </div>
 
-            {payments.length === 0 && students.length === 0 && (
+            {payments.length === 0 && recentEnrollments.length === 0 && (
               <div style={{ textAlign: 'center', padding: '60px 20px' }}>
                 <div style={{ fontSize: '48px', marginBottom: '16px' }}>💳</div>
                 <p style={{ color: '#94a3b8', fontSize: '15px', fontWeight: '600' }}>No payment requests yet</p>
