@@ -146,14 +146,19 @@ app.delete('/api/courses/:id', requireAdmin, async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 app.get('/api/videos', async (req, res) => {
   try {
-    const filter = req.query.courseId ? { courseId: req.query.courseId } : {};
-    const videos = await Video.find(filter).sort({ createdAt: -1 });
+    if (!req.query.courseId) {
+      return res.status(400).json({ error: 'courseId is required. Videos cannot be accessed outside a course.' });
+    }
+    const videos = await Video.find({ courseId: req.query.courseId }).sort({ createdAt: -1 });
     res.json(videos);
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/videos', requireAdmin, async (req, res) => {
   try {
+    if (!req.body.courseId) {
+      return res.status(400).json({ error: 'courseId is strictly required to upload a video.' });
+    }
     const video = await Video.create(req.body);
     res.status(201).json(video);
   } catch (err: any) { res.status(500).json({ error: err.message }); }
