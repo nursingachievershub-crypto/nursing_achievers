@@ -14,11 +14,13 @@
   },
   "dependencies": {
     "@react-oauth/google": "^0.13.4",
+    "@types/jsonwebtoken": "^9.0.10",
     "axios": "^1.15.0",
     "clsx": "^2.1.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.1",
     "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.7.0",
     "mongoose": "^8.23.0",
     "react": "^19.2.4",
