@@ -146,6 +146,36 @@ export const AdminDashboard = () => {
       .catch(err => console.error('Failed to load students:', err));
   }, [payments]);
 
+  // ── Compute derived unique approved students for the Students tab ──
+  const displayStudentsMap = new Map();
+  payments.forEach(p => {
+    if (p.status === 'approved' && p.studentEmail) {
+      const email = p.studentEmail.toLowerCase();
+      if (!displayStudentsMap.has(email)) {
+        displayStudentsMap.set(email, {
+          id: p._id || p.id || email,
+          name: p.studentName,
+          email: p.studentEmail,
+          courses: new Set(p.courses?.map((c: any) => c.title) || []),
+        });
+      } else {
+        const existing = displayStudentsMap.get(email);
+        p.courses?.forEach((c: any) => existing.courses.add(c.title));
+      }
+    }
+  });
+
+  const displayStudents = Array.from(displayStudentsMap.values()).map(student => {
+    const registeredUser = realStudents.find(rs => rs.email?.toLowerCase() === student.email.toLowerCase());
+    return {
+      id: student.id,
+      name: registeredUser?.name || student.name,
+      email: student.email,
+      loginType: registeredUser ? (registeredUser.loginType || 'Google') : 'Pending Registration',
+      enrolledCourses: Array.from(new Set([...Array.from(student.courses), ...(registeredUser?.enrolledCourses || [])]))
+    };
+  });
+
   const [quizMode,  setQuizMode]  = useState<'manual' | 'json'>('manual');
   const [jsonError, setJsonError] = useState('');
   const [quizForm,  setQuizForm]  = useState<{ title: string; level: string; topic: string; course: string; questions: QuizQuestion[] }>({ title: '', level: 'Beginner', topic: '', course: '', questions: [emptyQ()] });
@@ -168,7 +198,7 @@ export const AdminDashboard = () => {
     ?? payments.filter(p => p.status === 'approved').reduce((sum, p) => sum + p.total, 0);
   const pendingCount = analytics?.overview?.pendingPayments
     ?? payments.filter(p => p.status === 'pending').length;
-  const totalStudents = analytics?.overview?.totalStudents ?? realStudents.length;
+  const totalStudents = displayStudents.length; // Reflect only unique approved students
 
   // ── Handlers ──
   const handleSaveCourse = async () => {
@@ -682,13 +712,13 @@ export const AdminDashboard = () => {
         {activeTab === 'Students' && (
           <div style={tableCardStyle}>
             <Table headers={['Student Name', 'Email', 'Login Type', 'Enrolled Courses']}>
-              {realStudents.map((s, i) => (
-                <tr key={s._id || i} style={{ borderTop: '1px solid #f1f5f9' }}>
+              {displayStudents.map((s, i) => (
+                <tr key={s.id || i} style={{ borderTop: '1px solid #f1f5f9' }}>
                   <td style={td}><span style={{ fontWeight: '600', color: '#1e293b' }}>{s.name}</span></td>
                   <td style={{ ...td, color: '#64748b' }}>{s.email}</td>
                   <td style={td}>
                     <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', backgroundColor: '#eff6ff', color: '#2563eb' }}>
-                      {s.loginType || 'Google'}
+                      {s.loginType}
                     </span>
                   </td>
                   <td style={{ ...td, fontSize: '12px', color: '#64748b' }}>
