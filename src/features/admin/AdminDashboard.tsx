@@ -1321,10 +1321,6 @@ const ModalActions = ({ onSave, onCancel }: { onSave: () => void; onCancel: () =
   </div>
 );
 
-const EmptyState = ({ label }: { label: string }) => (
-  <p style={{ color: '#94a3b8', fontSize: '14px', margin: '10px 0' }}>{label}</p>
-);
-
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const curriculumSection: React.CSSProperties = { backgroundColor: '#fff', border: '1px solid #e8edf2', borderRadius: '14px', overflow: 'hidden', marginBottom: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' };
 const curriculumEmpty: React.CSSProperties   = { padding: '16px 20px', fontSize: '13px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '12px' };
