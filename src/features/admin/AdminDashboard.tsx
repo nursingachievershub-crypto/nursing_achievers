@@ -92,9 +92,6 @@ const Icons = {
 const NAV_ITEMS = [
   { label: 'Dashboard',   icon: Icons.dashboard },
   { label: 'Courses',     icon: Icons.courses },
-  { label: 'Videos',      icon: Icons.videos },
-  { label: 'Notes',       icon: Icons.notes },
-  { label: 'Quizzes',     icon: Icons.assignments },
   { label: 'Students',    icon: Icons.students },
   { label: 'Payments',    icon: Icons.payments },
 ];
@@ -596,115 +593,6 @@ export const AdminDashboard = () => {
                 </div>
               </div>
             )}
-          </div>
-        )}
-
-        {/* ── VIDEOS ── */}
-        {activeTab === 'Videos' && (
-          <div>
-            <button onClick={() => { setShowVideoModal(true); setVideoForm({ title: '', course: '', url: '', description: '', category: '', videoType: 'Full Lecture' }); }} style={addBtn}>+ Upload Video</button>
-            <div style={gridStyle}>
-              {videos.length === 0 && <EmptyState label="No videos uploaded yet" />}
-              {videos.map((v) => {
-                const ytId = getYouTubeId(v.youtubeUrl || v.url);
-                return (
-                  <div key={v._id || v.id} style={cardStyle}>
-                    {/* Thumbnail */}
-                    <div style={{ height: '145px', borderRadius: '10px', overflow: 'hidden', marginBottom: '14px', position: 'relative', background: '#0f172a' }}>
-                      {ytId ? (
-                        <img
-                          src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`}
-                          alt={v.title}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }}
-                        />
-                      ) : (
-                        <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#1e3a5f,#2563eb)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        </div>
-                      )}
-                      {/* Play overlay */}
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ width: '40px', height: '40px', background: 'rgba(0,0,0,0.55)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" stroke="#fff" strokeWidth="0"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        </div>
-                      </div>
-                      {/* Type badge */}
-                      {v.videoType && (
-                        <span style={{ position: 'absolute', top: '8px', left: '8px', background: 'rgba(37,99,235,0.85)', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '3px 8px', borderRadius: '4px' }}>{v.videoType}</span>
-                      )}
-                    </div>
-                    <h4 style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: '700', color: '#1e293b', lineHeight: 1.4 }}>{v.title}</h4>
-                    {v.description && <p style={{ margin: '0 0 8px', fontSize: '12px', color: '#64748b', lineHeight: 1.5 }}>{v.description}</p>}
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
-                      {v.category && <span style={{ background: '#f5f3ff', color: '#7c3aed', fontSize: '11px', fontWeight: '600', padding: '3px 8px', borderRadius: '4px' }}>{v.category}</span>}
-                      <span style={{ background: '#f1f5f9', color: '#64748b', fontSize: '11px', fontWeight: '500', padding: '3px 8px', borderRadius: '4px' }}>{courses.find(c => (c._id || c.id) === v.courseId)?.title || ''}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── NOTES ── */}
-        {activeTab === 'Notes' && (
-          <div>
-            <button onClick={() => { setShowNoteModal(true); setNoteForm({ title: '', description: '', course: '', price: '', fileName: '', docType: 'Study Notes', fileSize: '', fileUrl: '' }); }} style={addBtn}>+ Add Note</button>
-            <div style={gridStyle}>
-              {notes.length === 0 && <EmptyState label="No notes added yet" />}
-              {notes.map((n) => {
-                const di = getDocIcon(n.fileName);
-                return (
-                  <div key={n._id || n.id} style={cardStyle}>
-                    {/* Doc preview banner */}
-                    <div style={{ height: '120px', borderRadius: '10px', background: di.bg, border: `1px solid ${di.color}22`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '14px', position: 'relative', overflow: 'hidden' }}>
-                      <span style={{ fontSize: '42px', lineHeight: 1 }}>{di.icon}</span>
-                      <span style={{ fontSize: '11px', fontWeight: '800', color: di.color, letterSpacing: '1px' }}>{di.label}</span>
-                      {n.fileUrl && (
-                        <a href={n.fileUrl} target="_blank" rel="noreferrer" style={{ position: 'absolute', bottom: '8px', right: '10px', fontSize: '11px', color: di.color, fontWeight: '600', textDecoration: 'none', background: '#fff', padding: '2px 8px', borderRadius: '4px', border: `1px solid ${di.color}44` }}>Preview ↗</a>
-                      )}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px', marginBottom: '4px' }}>
-                      <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#1e293b', lineHeight: 1.4 }}>{n.title}</h4>
-                      <span style={{ background: di.bg, color: di.color, fontSize: '10px', fontWeight: '700', padding: '3px 7px', borderRadius: '4px', flexShrink: 0 }}>{di.label}</span>
-                    </div>
-                    {n.description && <p style={{ margin: '0 0 8px', fontSize: '12px', color: '#64748b', lineHeight: 1.5 }}>{n.description}</p>}
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                      {n.docType && <span style={{ background: '#f5f3ff', color: '#7c3aed', fontSize: '11px', fontWeight: '600', padding: '3px 8px', borderRadius: '4px' }}>{n.docType}</span>}
-                      {n.fileSize && <span style={{ background: '#f1f5f9', color: '#64748b', fontSize: '11px', padding: '3px 8px', borderRadius: '4px' }}>{n.fileSize}</span>}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '17px', fontWeight: '800', color: '#2563eb' }}>{n.price > 0 ? `₹${n.price.toLocaleString()}` : 'Free'}</span>
-                      <span style={{ fontSize: '11px', color: '#94a3b8' }}>{courses.find(c => (c._id || c.id) === n.courseId)?.title || ''}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── QUIZZES ── */}
-        {activeTab === 'Quizzes' && (
-          <div>
-            <button onClick={() => { resetQuizForm(); setShowAssignmentModal(true); }} style={addBtn}>+ Create Quiz</button>
-            <div style={gridStyle}>
-              {quizzes.length === 0 && <EmptyState label="No quizzes created yet" />}
-              {quizzes.map((quiz) => (
-                <div key={quiz._id || quiz.id} style={cardStyle}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <span style={{ background: '#f0fdf4', color: '#059669', fontSize: '11px', fontWeight: '700', padding: '3px 10px', borderRadius: '20px' }}>{quiz.level}</span>
-                    <span style={{ background: '#f1f5f9', color: '#64748b', fontSize: '11px', fontWeight: '600', padding: '3px 8px', borderRadius: '4px' }}>{quiz.questions.length} Qs</span>
-                  </div>
-                  <h4 style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>{quiz.title}</h4>
-                  {quiz.topic && <p style={{ margin: '0 0 8px', fontSize: '12px', color: '#64748b' }}>📌 {quiz.topic}</p>}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
-                    <span>{courses.find(c => (c._id || c.id) === quiz.courseId)?.title || 'No course assigned'}</span>
-                    <span>{quiz.createdAt ? new Date(quiz.createdAt).toLocaleDateString('en-IN') : ''}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         )}
 
