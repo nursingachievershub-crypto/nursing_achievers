@@ -18,9 +18,14 @@ export function useNotes() {
 
   const addNote = async (data: any) => {
     const created = await notesAPI.create(data);
-    setNotes(prev => [...prev, created]);
+    setNotes(prev => [created, ...prev]);
     return created;
   };
 
-  return { notes, loading, addNote, refetch: fetchNotes };
+  const deleteNote = async (id: string) => {
+    await notesAPI.delete(id);
+    setNotes(prev => prev.filter(note => note._id !== id));
+  };
+
+  return { notes, loading, addNote, deleteNote, refetch: fetchNotes };
 }

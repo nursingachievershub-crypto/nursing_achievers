@@ -85,17 +85,37 @@ app.get('/api/auth', async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 app.get('/api/students', requireAdmin, async (_req, res) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 }).lean();
     const enrollments = await Enrollment.find().lean();
+    const approvedPayments = await Payment.find({ status: 'approved' }).lean();
 
-    // Map users to include their enrolled courses
-    const studentsData = users.map((user: any) => {
-      const userEnrollments = (enrollments as any[]).filter(e => e.userEmail === user.email);
+    // 1. Get unique emails for ONLY students who have approved payments or enrollments
+    const legitimateEmails = new Set([
+      ...(enrollments as any[]).map(e => e.userEmail.toLowerCase()),
+      ...(approvedPayments as any[]).map(p => p.studentEmail.toLowerCase())
+    ]);
+
+    // 2. Fetch profiles for these legitimate students (ignores unpaid dummy accounts)
+    const users = await User.find({ email: { $in: Array.from(legitimateEmails) } }).lean();
+
+    // 3. Construct the list (includes approved students even if they haven't logged in yet)
+    const studentsData = Array.from(legitimateEmails).map(email => {
+      const userDoc = users.find((u: any) => u.email.toLowerCase() === email) as any;
+      const userEnrollments = (enrollments as any[]).filter(e => e.userEmail.toLowerCase() === email);
+      
       return {
-        ...user,
+        ...(userDoc || {}),
+        _id: userDoc?._id || email, // Fallback ID if they haven't registered yet
+        email: email,
+        name: userDoc?.name || 'Pending Registration (Approved Payment)',
+        avatar: userDoc?.avatar || '',
+        loginType: userDoc?.loginType || 'student',
+        createdAt: userDoc?.createdAt || new Date(),
         enrolledCourses: userEnrollments.map(e => e.courseId)
       };
     });
+
+    // Sort by newest first
+    studentsData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     res.json(studentsData);
   } catch (err: any) { res.status(500).json({ error: err.message }); }

@@ -572,7 +572,7 @@ export const AdminDashboard = () => {
         {/* ── VIDEOS ── */}
         {activeTab === 'Videos' && (
           <div>
-            <button onClick={() => setShowVideoModal(true)} style={addBtn}>+ Upload Video</button>
+            <button onClick={() => { setShowVideoModal(true); setVideoForm({ title: '', course: '', url: '', description: '', category: '', videoType: 'Full Lecture' }); }} style={addBtn}>+ Upload Video</button>
             <div style={gridStyle}>
               {videos.length === 0 && <EmptyState label="No videos uploaded yet" />}
               {videos.map((v) => {
@@ -619,7 +619,7 @@ export const AdminDashboard = () => {
         {/* ── NOTES ── */}
         {activeTab === 'Notes' && (
           <div>
-            <button onClick={() => setShowNoteModal(true)} style={addBtn}>+ Add Note</button>
+            <button onClick={() => { setShowNoteModal(true); setNoteForm({ title: '', description: '', course: '', price: '', fileName: '', docType: 'Study Notes', fileSize: '', fileUrl: '' }); }} style={addBtn}>+ Add Note</button>
             <div style={gridStyle}>
               {notes.length === 0 && <EmptyState label="No notes added yet" />}
               {notes.map((n) => {
@@ -933,7 +933,7 @@ export const AdminDashboard = () => {
             </div>
 
             {/* Course */}
-            <Field label="Course">
+            <Field label="Course *">
               <select value={videoForm.course} onChange={e => setVideoForm({ ...videoForm, course: e.target.value })} style={inputStyle}>
                 <option value="">Select Course</option>
                 {courses.map(c => <option key={c._id || c.id} value={c._id || c.id}>{c.title}</option>)}
@@ -948,8 +948,8 @@ export const AdminDashboard = () => {
               >Cancel</button>
               <button
                 onClick={handleSaveVideo}
-                disabled={!videoForm.title.trim() || !videoForm.url.trim()}
-                style={{ flex: 2, padding: '12px', background: videoForm.title.trim() && videoForm.url.trim() ? 'linear-gradient(135deg,#1e3a5f,#2563eb)' : '#cbd5e1', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: videoForm.title.trim() && videoForm.url.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                disabled={!videoForm.title.trim() || !videoForm.url.trim() || !videoForm.course}
+                style={{ flex: 2, padding: '12px', background: videoForm.title.trim() && videoForm.url.trim() && videoForm.course ? 'linear-gradient(135deg,#1e3a5f,#2563eb)' : '#cbd5e1', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: videoForm.title.trim() && videoForm.url.trim() && videoForm.course ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                 Upload Video
@@ -1094,7 +1094,7 @@ export const AdminDashboard = () => {
             </div>
 
             {/* Course */}
-            <Field label="Course">
+            <Field label="Course *">
               <select value={noteForm.course} onChange={e => setNoteForm({ ...noteForm, course: e.target.value })} style={inputStyle}>
                 <option value="">Select Course</option>
                 {courses.map(c => <option key={c._id || c.id} value={c._id || c.id}>{c.title}</option>)}
@@ -1109,8 +1109,8 @@ export const AdminDashboard = () => {
               >Cancel</button>
               <button
                 onClick={handleSaveNote}
-                disabled={!noteForm.title.trim() || !noteForm.fileName.trim()}
-                style={{ flex: 2, padding: '12px', background: noteForm.title.trim() && noteForm.fileName.trim() ? 'linear-gradient(135deg,#7c3aed,#a855f7)' : '#cbd5e1', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: noteForm.title.trim() && noteForm.fileName.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                disabled={!noteForm.title.trim() || !noteForm.fileName.trim() || !noteForm.course}
+                style={{ flex: 2, padding: '12px', background: noteForm.title.trim() && noteForm.fileName.trim() && noteForm.course ? 'linear-gradient(135deg,#7c3aed,#a855f7)' : '#cbd5e1', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: noteForm.title.trim() && noteForm.fileName.trim() && noteForm.course ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 Upload Document
@@ -1173,7 +1173,7 @@ export const AdminDashboard = () => {
                     <input placeholder="e.g. Pharmacology" value={quizForm.topic} onChange={e => setQuizForm(f => ({ ...f, topic: e.target.value }))} style={inputStyle} />
                   </div>
                   <div>
-                    <label style={labelStyle}>Course</label>
+                  <label style={labelStyle}>Course *</label>
                     <select value={quizForm.course} onChange={e => setQuizForm(f => ({ ...f, course: e.target.value }))} style={inputStyle}>
                       <option value="">Select Course</option>
                       {courses.map(c => <option key={c._id || c.id} value={c._id || c.id}>{c.title}</option>)}
@@ -1327,8 +1327,8 @@ export const AdminDashboard = () => {
               >Cancel</button>
               <button
                 onClick={handleSaveQuiz}
-                disabled={!quizForm.title.trim() || !quizForm.questions.some(q => q.questionText.trim())}
-                style={{ flex: 2, padding: '12px', background: quizForm.title.trim() && quizForm.questions.some(q => q.questionText.trim()) ? 'linear-gradient(135deg,#059669,#10b981)' : '#cbd5e1', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: quizForm.title.trim() && quizForm.questions.some(q => q.questionText.trim()) ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                disabled={!quizForm.title.trim() || !quizForm.questions.some(q => q.questionText.trim()) || !quizForm.course}
+                style={{ flex: 2, padding: '12px', background: quizForm.title.trim() && quizForm.questions.some(q => q.questionText.trim()) && quizForm.course ? 'linear-gradient(135deg,#059669,#10b981)' : '#cbd5e1', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: quizForm.title.trim() && quizForm.questions.some(q => q.questionText.trim()) && quizForm.course ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/></svg>
                 Create Quiz
