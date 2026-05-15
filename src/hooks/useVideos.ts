@@ -6,9 +6,6 @@ export function useVideos(courseId?: string) {
   const [loading, setLoading] = useState(true);
 
   const fetchVideos = useCallback(async () => {
-    // Do not fetch if there's no courseId, matching your backend requirement
-    if (!courseId) return; 
-    
     try {
       setLoading(true);
       const data = await videosAPI.getAll(courseId);

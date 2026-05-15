@@ -120,7 +120,7 @@ export const AdminDashboard = () => {
 
   // ── API hooks (MongoDB-backed) ──
   const { courses, addCourse, updateCourse, deleteCourse } = useCourses();
-  const { videos, addVideo } = useVideos();
+  const { videos, addVideo, deleteVideo } = useVideos();
   const { notes, addNote } = useNotes();
   const { quizzes, addQuiz } = useQuizzes();
   const { analytics } = useAnalytics();
@@ -534,10 +534,11 @@ export const AdminDashboard = () => {
                     </div>
                   ) : (
                     videos.filter(v => v.courseId === (selectedCourse._id || selectedCourse.id)).map((v) => (
-                      <div key={v.id} style={lessonRow}>
+                      <div key={v._id || v.id} style={lessonRow}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                         <span style={{ flex: 1, fontSize: '14px', color: '#1e293b' }}>{v.title}</span>
                         <span style={tagStyle('#eff6ff', '#2563eb')}>Video</span>
+                        <button onClick={async (e) => { e.stopPropagation(); try { await deleteVideo(v._id || v.id); } catch(err) { console.error(err); } }} style={deleteBtn}>Delete</button>
                       </div>
                     ))
                   )}
