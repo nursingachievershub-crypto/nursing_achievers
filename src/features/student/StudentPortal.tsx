@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { usePayments } from '../../context/PaymentContext';
 import { useQuizzes } from '../../hooks/useQuizzes';
+import { useVideos } from '../../hooks/useVideos';
+import { useNotes } from '../../hooks/useNotes';
 import { coursesAPI } from '../../api/client';
 
 type NursingAchieversPortalProps = {
@@ -132,6 +134,8 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
   
   const { payments } = usePayments();
   const { quizzes } = useQuizzes();
+  const { videos } = useVideos();
+  const { notes } = useNotes();
   
   const [activeQuiz, setActiveQuiz] = useState<any>(null);
   const [quizAnswers, setQuizAnswers] = useState<number[]>([]);
@@ -195,6 +199,8 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
 
   const isEnrolled = enrolledCourseIds.length > 0;
   const myQuizzes = quizzes.filter(q => enrolledCourseIds.includes(q.courseId));
+  const myVideos = videos.filter(v => enrolledCourseIds.includes(v.courseId));
+  const myNotes = notes.filter(n => enrolledCourseIds.includes(n.courseId));
 
   const handleStartQuiz = (quiz: any) => {
     setActiveQuiz(quiz);
@@ -558,19 +564,35 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
                           </>
                         )}
                       </div>
-                      <button
-                        onClick={() => onEnroll({ title: course.title, price: course.price })}
-                        style={{
-                          width: '100%', padding: '13px',
-                          background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                          color: '#fff', border: 'none', borderRadius: '10px',
-                          fontWeight: '700', fontSize: '14px', cursor: 'pointer',
-                          boxShadow: '0 5px 16px rgba(37,99,235,0.35)',
-                          letterSpacing: '0.3px',
-                        }}
-                      >
-                        Enroll Now →
-                      </button>
+                      {approvedCourseTitles.has(course.title) ? (
+                        <button
+                          onClick={() => handleNavClick('Video Lectures')}
+                          style={{
+                            width: '100%', padding: '13px',
+                            background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                            color: '#fff', border: 'none', borderRadius: '10px',
+                            fontWeight: '700', fontSize: '14px', cursor: 'pointer',
+                            boxShadow: '0 5px 16px rgba(5,150,105,0.35)',
+                            letterSpacing: '0.3px',
+                          }}
+                        >
+                          Start Learning →
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => onEnroll({ title: course.title, price: course.price })}
+                          style={{
+                            width: '100%', padding: '13px',
+                            background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                            color: '#fff', border: 'none', borderRadius: '10px',
+                            fontWeight: '700', fontSize: '14px', cursor: 'pointer',
+                            boxShadow: '0 5px 16px rgba(37,99,235,0.35)',
+                            letterSpacing: '0.3px',
+                          }}
+                        >
+                          Enroll Now →
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -699,8 +721,97 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
             </div>
           )}
 
+          {/* ─── VIDEO LECTURES TAB ─── */}
+          {activeNav === 'Video Lectures' && isEnrolled && (
+            <div>
+              <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>My Video Lectures</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
+                {myVideos.map(video => {
+                  const url = video.youtubeUrl || video.url || '';
+                  const videoId = url ? (url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/) || [])[1] : null;
+                  return (
+                    <div key={video._id || video.id} style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                      <div style={{ height: '180px', background: '#0f172a', position: 'relative' }}>
+                        {videoId ? (
+                          <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${videoId}`} title={video.title} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                        ) : (
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>No Video</div>
+                        )}
+                        {video.videoType && <span style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(37,99,235,0.9)', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px' }}>{video.videoType}</span>}
+                      </div>
+                      <div style={{ padding: '20px' }}>
+                        <h3 style={{ fontSize: '16px', fontWeight: '800', margin: '0 0 8px', color: '#1e293b' }}>{video.title}</h3>
+                        {video.description && <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 16px', lineHeight: 1.5 }}>{video.description}</p>}
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <span style={{ background: '#f1f5f9', color: '#64748b', fontSize: '11px', fontWeight: '600', padding: '4px 10px', borderRadius: '6px' }}>
+                            {courses.find(c => (c._id || c.id) === video.courseId)?.title || 'Course Video'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {myVideos.length === 0 && (
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎥</div>
+                    <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#475569', margin: '0 0 8px' }}>No Videos Yet</h3>
+                    <p style={{ fontSize: '14px', fontWeight: '500', margin: 0 }}>Video lectures for your enrolled courses will appear here.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ─── STUDY NOTES TAB ─── */}
+          {activeNav === 'Study Notes' && isEnrolled && (
+            <div>
+              <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>My Study Notes</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+                {myNotes.map(note => (
+                  <div key={note._id || note.id} style={{ background: '#fff', borderRadius: '16px', padding: '24px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                    <div style={{ width: '72px', height: '72px', borderRadius: '18px', background: note.fileName?.endsWith('.pdf') ? '#fef2f2' : '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', marginBottom: '20px' }}>
+                      {note.fileName?.endsWith('.pdf') ? '📄' : '📝'}
+                    </div>
+                    <h3 style={{ fontSize: '16px', fontWeight: '800', margin: '0 0 8px', color: '#1e293b' }}>{note.title}</h3>
+                    {note.description && <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 16px', lineHeight: 1.5 }}>{note.description}</p>}
+                    <span style={{ background: '#f1f5f9', color: '#64748b', fontSize: '11px', fontWeight: '600', padding: '4px 10px', borderRadius: '6px', marginBottom: '20px' }}>
+                      {courses.find(c => (c._id || c.id) === note.courseId)?.title || 'Course Note'}
+                    </span>
+                    {note.fileUrl ? (
+                      <a href={note.fileUrl} target="_blank" rel="noopener noreferrer" style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px', textDecoration: 'none', display: 'inline-block', boxSizing: 'border-box', boxShadow: '0 4px 14px rgba(124,58,237,0.3)' }}>
+                        Open Document →
+                      </a>
+                    ) : (
+                      <button disabled style={{ width: '100%', padding: '12px', background: '#e2e8f0', color: '#94a3b8', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px' }}>
+                        Processing...
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {myNotes.length === 0 && (
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>📚</div>
+                    <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#475569', margin: '0 0 8px' }}>No Notes Yet</h3>
+                    <p style={{ fontSize: '14px', fontWeight: '500', margin: 0 }}>Study materials for your enrolled courses will appear here.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ─── MY PROGRESS TAB ─── */}
+          {activeNav === 'My Progress' && isEnrolled && (
+            <div style={{ textAlign: 'center', padding: '80px 20px', color: '#94a3b8', background: '#fff', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', maxWidth: '600px', margin: '0 auto', marginTop: '40px' }}>
+              <div style={{ fontSize: '64px', marginBottom: '20px' }}>📈</div>
+              <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', margin: '0 0 12px' }}>My Progress</h2>
+              <p style={{ fontSize: '15px', fontWeight: '500', maxWidth: '400px', margin: '0 auto', lineHeight: 1.6 }}>
+                We are currently tracking your learning journey! Detailed analytics and progress reports are coming in the next update.
+              </p>
+            </div>
+          )}
+
           {/* ─── OTHER TABS — Premium Lock Screen ─── */}
-          {activeNav !== 'Courses' && (activeNav !== 'Mock Tests' || !isEnrolled) && (
+          {activeNav !== 'Courses' && !isEnrolled && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '65vh', textAlign: 'center' }}>
               <div style={{
                 width: '88px', height: '88px',

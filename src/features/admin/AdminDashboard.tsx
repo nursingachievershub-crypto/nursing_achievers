@@ -313,6 +313,8 @@ export const AdminDashboard = () => {
         setJsonError('');
       } catch (err: unknown) {
         setJsonError(err instanceof Error ? err.message : 'Invalid JSON format.');
+      } finally {
+        e.target.value = ''; // Reset input so the same file can be uploaded again
       }
     };
     reader.readAsText(file);
@@ -323,9 +325,11 @@ export const AdminDashboard = () => {
     if (!quizForm.title.trim() || validQs.length === 0) return;
     try {
       await addQuiz({ ...quizForm, questions: validQs, courseId: quizForm.course });
-    } catch (err) { console.error('Failed to save quiz:', err); }
-    setShowAssignmentModal(false);
-    resetQuizForm();
+      setShowAssignmentModal(false);
+      resetQuizForm();
+    } catch (err) { 
+      console.error('Failed to save quiz:', err); 
+    }
   };
 
   const handlePayment = (id: string, action: 'approved' | 'rejected') => {
@@ -1207,6 +1211,14 @@ export const AdminDashboard = () => {
             {/* ── JSON UPLOAD ── */}
             {quizMode === 'json' && (
               <div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={labelStyle}>Course * <span style={{ color: '#94a3b8', fontWeight: '400' }}>(Required)</span></label>
+                  <select value={quizForm.course} onChange={e => setQuizForm(f => ({ ...f, course: e.target.value }))} style={inputStyle}>
+                    <option value="">Select Course</option>
+                    {courses.map(c => <option key={c._id || c.id} value={c._id || c.id}>{c.title}</option>)}
+                  </select>
+                </div>
+
                 <div style={{ marginBottom: '16px' }}>
                   <label style={labelStyle}>Upload Quiz JSON File</label>
                   <label htmlFor="quizJsonInput" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '24px 16px', border: '2px dashed #cbd5e1', borderRadius: '10px', background: '#f8fafc', cursor: 'pointer' }}>
