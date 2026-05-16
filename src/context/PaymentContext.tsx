@@ -56,7 +56,8 @@ export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const updatePaymentStatus = async (id: string, status: 'approved' | 'rejected') => {
     try {
       const updated = await paymentsAPI.update(id, { status });
-      setPayments(prev => prev.map(p => (p._id === id ? updated : p)));
+      // Check both _id and id to guarantee the UI updates instantly
+      setPayments(prev => prev.map(p => ((p._id || p.id) === id ? updated : p)));
     } catch (err) {
       console.error('Failed to update payment status:', err);
     }

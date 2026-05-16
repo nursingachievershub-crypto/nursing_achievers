@@ -293,13 +293,15 @@ app.patch('/api/payments/:id', requireAdmin, async (req, res) => {
 
     // On approval, create enrollments
     if (status === 'approved' && payment.courses?.length) {
-      const user = await User.findOne({ email: payment.studentEmail.toLowerCase() });
-      const userId = user?._id?.toString() || payment.studentEmail;
+      // Safely fallback if a test payment was submitted without an email
+      const email = payment.studentEmail ? payment.studentEmail.toLowerCase() : 'unknown@student.com';
+      const user = await User.findOne({ email });
+      const userId = user?._id?.toString() || email;
 
       for (const course of payment.courses) {
         await Enrollment.findOneAndUpdate(
-          { userEmail: payment.studentEmail.toLowerCase(), courseId: course.title },
-          { userId, userEmail: payment.studentEmail.toLowerCase(), courseId: course.title },
+          { userEmail: email, courseId: course.title },
+          { userId, userEmail: email, courseId: course.title },
           { upsert: true, new: true }
         );
       }
