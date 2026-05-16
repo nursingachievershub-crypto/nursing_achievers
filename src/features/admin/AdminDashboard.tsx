@@ -255,39 +255,61 @@ export const AdminDashboard = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
         const data = JSON.parse(ev.target?.result as string);
-        // Robustly support both array and object quiz formats
-        let questionsRaw: any[] = [];
-        let quizTitle = '';
-        let quizLevel = '';
-        if (Array.isArray(data)) {
-          questionsRaw = data;
-        } else if (typeof data === 'object' && data !== null && Array.isArray(data.questions)) {
-          questionsRaw = data.questions;
-          quizTitle = typeof data.title === 'string' ? data.title : '';
-          quizLevel = typeof data.level === 'string' ? data.level : '';
-        } else {
-          throw new Error('Invalid quiz format: must be an array or object with questions array.');
+        
+        const processQuiz = (quizData: any) => {
+          let questionsRaw: any[] = [];
+          let qTitle = '';
+          let qLevel = '';
+          
+          if (Array.isArray(quizData)) {
+            questionsRaw = quizData;
+          } else if (typeof quizData === 'object' && quizData !== null && Array.isArray(quizData.questions)) {
+            questionsRaw = quizData.questions;
+            qTitle = typeof quizData.title === 'string' ? quizData.title : '';
+            qLevel = typeof quizData.level === 'string' ? quizData.level : '';
+          }
+          
+          return {
+            title: qTitle || quizForm.title || 'Imported Quiz',
+            level: qLevel || quizForm.level,
+            topic: typeof quizData.topic === 'string' ? quizData.topic : quizForm.topic,
+            courseId: quizForm.course,
+            questions: questionsRaw.map((q: any, i: number) => ({
+              id: `json-${Date.now()}-${i}`,
+              questionText: typeof q.questionText === 'string' ? q.questionText : String(q.question || ''),
+              questionCode: typeof q.questionCode === 'string' ? q.questionCode : '',
+              topicType: typeof q.topicType === 'string' ? q.topicType : '',
+              options: Array.isArray(q.options) ? q.options.map(String) : ['', '', '', ''],
+              answer: typeof q.correct_index === 'number' ? q.correct_index : (typeof q.answer === 'number' ? q.answer : 0),
+              explanation: typeof q.explanation === 'string' ? q.explanation : '',
+            }))
+          };
+        };
+
+        // Handle an array of multiple quizzes uploaded at once
+        if (Array.isArray(data) && data.length > 0 && data[0].questions) {
+          if (!quizForm.course) {
+             throw new Error("Please select a Course first before uploading multiple quizzes.");
+          }
+          for (const q of data) {
+             const parsed = processQuiz(q);
+             if (parsed.questions.length > 0) {
+               await addQuiz(parsed);
+             }
+          }
+          setShowAssignmentModal(false);
+          resetQuizForm();
+          return;
         }
-        if (!questionsRaw.length) throw new Error('No questions found in JSON.');
-        // Normalize all questions
-        const questions: QuizQuestion[] = questionsRaw.map((q: Record<string, unknown>, i: number) => ({
-          id: `json-${i}`,
-          questionText: typeof q.questionText === 'string' ? q.questionText : String(q.question || ''),
-          questionCode: typeof q.questionCode === 'string' ? q.questionCode : '',
-          topicType: typeof q.topicType === 'string' ? q.topicType : '',
-          options: Array.isArray(q.options) ? q.options.map(String) : ['', '', '', ''],
-          answer: typeof q.correct_index === 'number' ? q.correct_index : (typeof q.answer === 'number' ? q.answer : 0),
-          explanation: typeof q.explanation === 'string' ? q.explanation : '',
-        }));
-        setQuizForm(f => ({
-          ...f,
-          title: quizTitle || f.title,
-          level: quizLevel || f.level,
-          questions
-        }));
+        
+        // Single quiz object or array of questions
+        const parsed = processQuiz(data);
+        if (!parsed.questions.length) throw new Error('No questions found in JSON.');
+        
+        setQuizForm(f => ({ ...f, ...parsed }));
         setJsonError('');
       } catch (err: unknown) {
         setJsonError(err instanceof Error ? err.message : 'Invalid JSON format.');

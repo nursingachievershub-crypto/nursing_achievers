@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { usePayments } from '../../context/PaymentContext';
+import { useQuizzes } from '../../hooks/useQuizzes';
 import { coursesAPI } from '../../api/client';
 
 type NursingAchieversPortalProps = {
@@ -127,6 +129,13 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth <= 768);
   const [courses, setCourses] = useState<any[]>(defaultCourses);
+  
+  const { payments } = usePayments();
+  const { quizzes } = useQuizzes();
+  
+  const [activeQuiz, setActiveQuiz] = useState<any>(null);
+  const [quizAnswers, setQuizAnswers] = useState<number[]>([]);
+  const [quizResult, setQuizResult] = useState<any>(null);
 
   // Handle window resize for mobile responsiveness
   useEffect(() => {
@@ -171,6 +180,45 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
   const handleNavClick = (label: string) => {
     setActiveNav(label);
     if (isMobile) setIsNavOpen(false);
+  };
+
+  // Verify if student has an approved payment for any courses
+  const approvedCourseTitles = new Set(
+    payments
+      .filter((p: any) => p.studentEmail?.toLowerCase() === user?.email?.toLowerCase() && p.status === 'approved')
+      .flatMap((p: any) => p.courses.map((c: any) => c.title))
+  );
+
+  const enrolledCourseIds = courses
+    .filter(c => approvedCourseTitles.has(c.title))
+    .map(c => c._id || c.id);
+
+  const isEnrolled = enrolledCourseIds.length > 0;
+  const myQuizzes = quizzes.filter(q => enrolledCourseIds.includes(q.courseId));
+
+  const handleStartQuiz = (quiz: any) => {
+    setActiveQuiz(quiz);
+    setQuizAnswers(new Array(quiz.questions.length).fill(-1));
+    setQuizResult(null);
+  };
+
+  const handleSubmitQuiz = async () => {
+    try {
+      const response = await fetch('/api/quizzes?action=submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quizId: activeQuiz._id || activeQuiz.id,
+          userId: user?.email,
+          userEmail: user?.email,
+          answers: quizAnswers
+        })
+      });
+      const result = await response.json();
+      setQuizResult(result);
+    } catch (err) {
+      console.error("Failed to submit quiz", err);
+    }
   };
 
   return (
@@ -530,8 +578,129 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
             </>
           )}
 
+          {/* ─── MOCK TESTS TAB ─── */}
+          {activeNav === 'Mock Tests' && isEnrolled && !activeQuiz && (
+            <div>
+              <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>My Mock Tests</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                {myQuizzes.map(quiz => (
+                  <div key={quiz._id || quiz.id} style={{ background: '#fff', borderRadius: '16px', padding: '24px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                      <span style={{ background: '#f0fdf4', color: '#059669', fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '20px' }}>{quiz.level}</span>
+                      <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600' }}>{quiz.questions?.length} Qs</span>
+                    </div>
+                    <h3 style={{ fontSize: '16px', fontWeight: '800', margin: '0 0 8px', color: '#1e293b' }}>{quiz.title}</h3>
+                    {quiz.topic && <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 16px' }}>📌 {quiz.topic}</p>}
+                    <button
+                      onClick={() => handleStartQuiz(quiz)}
+                      style={{ width: '100%', padding: '10px', background: 'linear-gradient(135deg, #059669, #10b981)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}
+                    >
+                      Start Quiz →
+                    </button>
+                  </div>
+                ))}
+                {myQuizzes.length === 0 && (
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
+                    <div style={{ fontSize: '40px', marginBottom: '10px' }}>📝</div>
+                    <p style={{ fontSize: '15px', fontWeight: '600' }}>No quizzes available for your enrolled courses yet.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeNav === 'Mock Tests' && isEnrolled && activeQuiz && (
+            <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '32px', maxWidth: '800px', margin: '0 auto', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
+              <button onClick={() => setActiveQuiz(null)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '600', fontSize: '14px', padding: 0 }}>
+                ← Back to Quizzes
+              </button>
+              
+              <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#1e293b', marginBottom: '24px' }}>{activeQuiz.title}</h2>
+              
+              {quizResult ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                  <div style={{ fontSize: '64px', marginBottom: '16px' }}>{quizResult.score >= activeQuiz.questions.length / 2 ? '🎉' : '📚'}</div>
+                  <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', margin: '0 0 10px' }}>Quiz Completed!</h3>
+                  <p style={{ fontSize: '18px', color: '#64748b', fontWeight: '600', margin: '0 0 32px' }}>
+                    Your score: <span style={{ color: '#2563eb', fontSize: '24px' }}>{quizResult.score}</span> / {quizResult.totalMarks}
+                  </p>
+                  
+                  <div style={{ textAlign: 'left', marginTop: '20px' }}>
+                    <h4 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>Review Answers:</h4>
+                    {activeQuiz.questions.map((q: any, i: number) => (
+                      <div key={i} style={{ marginBottom: '16px', padding: '16px', borderRadius: '10px', background: quizAnswers[i] === q.answer ? '#f0fdf4' : '#fef2f2', border: `1px solid ${quizAnswers[i] === q.answer ? '#bbf7d0' : '#fecaca'}` }}>
+                        <p style={{ margin: '0 0 10px', fontWeight: '700', fontSize: '14px' }}>{i + 1}. {q.questionText}</p>
+                        <p style={{ margin: 0, fontSize: '13px', color: quizAnswers[i] === q.answer ? '#059669' : '#ef4444' }}>
+                          <strong>Your Answer:</strong> {q.options[quizAnswers[i]] || 'Skipped'}
+                        </p>
+                        {quizAnswers[i] !== q.answer && (
+                          <p style={{ margin: '6px 0 0', fontSize: '13px', color: '#059669' }}>
+                            <strong>Correct Answer:</strong> {q.options[q.answer]}
+                          </p>
+                        )}
+                        {q.explanation && (
+                          <p style={{ margin: '10px 0 0', fontSize: '12px', color: '#64748b', background: 'rgba(255,255,255,0.6)', padding: '8px', borderRadius: '6px' }}>
+                            💡 {q.explanation}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <button onClick={() => setActiveQuiz(null)} style={{ marginTop: '24px', padding: '12px 32px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}>
+                    Continue Learning
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  {activeQuiz.questions.map((q: any, i: number) => (
+                    <div key={i} style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #f1f5f9' }}>
+                      <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', margin: '0 0 16px', lineHeight: 1.5 }}>
+                        <span style={{ color: '#2563eb', marginRight: '8px' }}>{i + 1}.</span>
+                        {q.questionText}
+                      </h3>
+                      {q.questionCode && (
+                        <pre style={{ background: '#1e293b', color: '#e2e8f0', padding: '16px', borderRadius: '8px', fontSize: '13px', overflowX: 'auto', marginBottom: '16px' }}>
+                          {q.questionCode}
+                        </pre>
+                      )}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {q.options.map((opt: string, oi: number) => (
+                          <label key={oi} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', background: quizAnswers[i] === oi ? '#eff6ff' : '#f8fafc', border: `1px solid ${quizAnswers[i] === oi ? '#bfdbfe' : '#e2e8f0'}`, borderRadius: '10px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                            <input 
+                              type="radio" 
+                              name={`question-${i}`} 
+                              checked={quizAnswers[i] === oi} 
+                              onChange={() => {
+                                const newAnswers = [...quizAnswers];
+                                newAnswers[i] = oi;
+                                setQuizAnswers(newAnswers);
+                              }}
+                              style={{ width: '18px', height: '18px', accentColor: '#2563eb', cursor: 'pointer' }}
+                            />
+                            <span style={{ fontSize: '14px', color: '#334155', fontWeight: quizAnswers[i] === oi ? '600' : '500' }}>{opt}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+                    <button 
+                      onClick={handleSubmitQuiz}
+                      disabled={quizAnswers.includes(-1)}
+                      style={{ padding: '14px 32px', background: quizAnswers.includes(-1) ? '#cbd5e1' : 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '15px', cursor: quizAnswers.includes(-1) ? 'not-allowed' : 'pointer', boxShadow: quizAnswers.includes(-1) ? 'none' : '0 4px 14px rgba(37,99,235,0.3)' }}
+                    >
+                      Submit Quiz
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ─── OTHER TABS — Premium Lock Screen ─── */}
-          {activeNav !== 'Courses' && (
+          {activeNav !== 'Courses' && (activeNav !== 'Mock Tests' || !isEnrolled) && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '65vh', textAlign: 'center' }}>
               <div style={{
                 width: '88px', height: '88px',
