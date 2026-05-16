@@ -228,8 +228,7 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f0f4f8', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
-
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: '#f0f4f8', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
       {/* Mobile backdrop */}
       <div className={`sidebar-backdrop ${isNavOpen && isMobile ? 'visible' : ''}`} onClick={() => setIsNavOpen(false)} />
 
@@ -240,8 +239,7 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
         background: 'linear-gradient(180deg, #0f172a 0%, #131f35 100%)',
         borderRight: '1px solid rgba(255,255,255,0.05)',
         display: 'flex', flexDirection: 'column',
-        minHeight: '100vh', position: 'sticky', top: 0,
-        flexShrink: 0,
+        height: '100vh', overflowY: 'auto', position: 'sticky', top: 0, flexShrink: 0,
         boxShadow: '4px 0 32px rgba(0,0,0,0.2)',
         zIndex: 200,
       }}>

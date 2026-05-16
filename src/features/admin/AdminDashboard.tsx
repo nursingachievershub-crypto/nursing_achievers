@@ -252,7 +252,9 @@ export const AdminDashboard = () => {
     setQuizForm(f => ({ ...f, questions: f.questions.map((q, i) => i === qi ? { ...q, options: q.options.map((o, j) => j === oi ? val : o) } : q) }));
 
   const handleJsonUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const n e) return;
+    const inputElement = e.target;
+    const file = inputElement.files?.[0];
+    if (!file) return;
     const reader = new FileReader();
     reader.onload = async (ev) => {
       try {
@@ -313,8 +315,10 @@ export const AdminDashboard = () => {
       } catch (err: unknown) {
         setJsonError(err instanceof Error ? err.message : 'Invalid JSON format.');
       } finally {
-        inputElem
+        inputElement.value = '';
+      }
     };
+    reader.readAsText(file);
   };
 
   const handleSaveQuiz = async () => {
@@ -334,13 +338,13 @@ export const AdminDashboard = () => {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: '#f8fafc', fontFamily: "'Inter', sans-serif" }}>
 
       {/* Mobile backdrop */}
       <div className={`sidebar-backdrop ${isNavOpen && isMobile ? 'visible' : ''}`} onClick={() => setIsNavOpen(false)} />
 
       {/* ── SIDEBAR ── */}
-      <aside className={`app-sidebar ${isNavOpen ? 'open' : ''}`} style={{ width: isNavOpen ? '260px' : '72px', transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1)', background: 'linear-gradient(180deg, #0f172a 0%, #131f35 100%)', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'sticky', top: 0, flexShrink: 0, boxShadow: '4px 0 32px rgba(0,0,0,0.2)', zIndex: 200 }}>
+      <aside className={`app-sidebar ${isNavOpen ? 'open' : ''}`} style={{ width: isNavOpen ? '260px' : '72px', transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1)', background: 'linear-gradient(180deg, #0f172a 0%, #131f35 100%)', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', height: '100vh', overflowY: 'auto', position: 'sticky', top: 0, flexShrink: 0, boxShadow: '4px 0 32px rgba(0,0,0,0.2)', zIndex: 200 }}>
 
         {/* Logo */}
         <div style={{ padding: isNavOpen ? '26px 20px 22px' : '26px 0 22px', display: 'flex', alignItems: 'center', justifyContent: isNavOpen ? 'flex-start' : 'center', gap: '14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
