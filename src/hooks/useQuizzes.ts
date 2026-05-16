@@ -22,5 +22,10 @@ export function useQuizzes() {
     return created;
   };
 
-  return { quizzes, loading, addQuiz, refetch: fetchQuizzes };
+  const deleteQuiz = async (id: string) => {
+    await quizzesAPI.delete(id);
+    setQuizzes(prev => prev.filter(q => q._id !== id));
+  };
+
+  return { quizzes, loading, addQuiz, deleteQuiz, refetch: fetchQuizzes };
 }

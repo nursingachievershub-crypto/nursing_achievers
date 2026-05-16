@@ -122,7 +122,7 @@ export const AdminDashboard = () => {
   const { courses, addCourse, updateCourse, deleteCourse } = useCourses();
   const { videos, addVideo, deleteVideo } = useVideos();
   const { notes, addNote } = useNotes();
-  const { quizzes, addQuiz } = useQuizzes();
+  const { quizzes, addQuiz, deleteQuiz } = useQuizzes();
   const { analytics } = useAnalytics();
 
   // Compute derived recent enrollments from actual payments for the dashboard table
@@ -582,11 +582,12 @@ export const AdminDashboard = () => {
                     </div>
                   ) : (
                     quizzes.filter(q => q.courseId === (selectedCourse._id || selectedCourse.id)).map((q) => (
-                      <div key={q.id} style={lessonRow}>
+                      <div key={q._id || q.id} style={lessonRow}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/></svg>
                         <span style={{ flex: 1, fontSize: '14px', color: '#1e293b' }}>{q.title}</span>
                         <span style={{ fontSize: '11px', color: '#94a3b8', marginRight: '8px' }}>{q.questions.length} Questions</span>
                         <span style={tagStyle('#f0fdf4', '#059669')}>Quiz</span>
+                        <button onClick={async (e) => { e.stopPropagation(); try { await deleteQuiz(q._id || q.id); } catch(err) { console.error(err); } }} style={deleteBtn}>Delete</button>
                       </div>
                     ))
                   )}
