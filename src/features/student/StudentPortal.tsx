@@ -565,19 +565,20 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
                         )}
                       </div>
                       {approvedCourseTitles.has(course.title) ? (
-                        <button
-                          onClick={() => handleNavClick('Video Lectures')}
-                          style={{
-                            width: '100%', padding: '13px',
-                            background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-                            color: '#fff', border: 'none', borderRadius: '10px',
-                            fontWeight: '700', fontSize: '14px', cursor: 'pointer',
-                            boxShadow: '0 5px 16px rgba(5,150,105,0.35)',
-                            letterSpacing: '0.3px',
-                          }}
-                        >
-                          Start Learning →
-                        </button>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={() => handleNavClick('Video Lectures')}
+                            style={{ flex: 1, padding: '12px', background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(5,150,105,0.3)' }}
+                          >
+                            ▶ Videos
+                          </button>
+                          <button
+                            onClick={() => handleNavClick('Mock Tests')}
+                            style={{ flex: 1, padding: '12px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' }}
+                          >
+                            📝 Quizzes
+                          </button>
+                        </div>
                       ) : (
                         <button
                           onClick={() => onEnroll({ title: course.title, price: course.price })}
