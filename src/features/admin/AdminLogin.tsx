@@ -7,11 +7,29 @@ export const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (email === 'admin@achievers.com' && password === 'admin123') {
-      localStorage.setItem('isAdmin', 'true');
-      navigate('/admin/dashboard');
+      try {
+        // Authenticate with the backend to receive the JWT token
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'nursingachievershub@gmail.com', // Maps to the recognized admin email
+            name: 'Admin',
+            avatar: '',
+            loginType: 'admin'
+          })
+        });
+        const data = await res.json();
+        if (data.token) localStorage.setItem('na_token', data.token);
+        
+        localStorage.setItem('isAdmin', 'true');
+        navigate('/admin/dashboard');
+      } catch (err) {
+        setError('Failed to authenticate with server.');
+      }
     } else {
       setError('Invalid credentials. Please try again.');
     }
