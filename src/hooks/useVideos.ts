@@ -17,14 +17,15 @@ export function useVideos(courseId?: string) {
   useEffect(() => { fetchVideos(); }, [fetchVideos]);
 
   const addVideo = async (data: any) => {
-    const created = await videosAPI.create({ ...data, courseId });
+    const payload = courseId ? { ...data, courseId } : data;
+    const created = await videosAPI.create(payload);
     setVideos(prev => [created, ...prev]);
     return created;
   };
 
   const deleteVideo = async (videoId: string) => {
     await videosAPI.delete(videoId);
-    setVideos(prev => prev.filter(video => video._id !== videoId));
+    setVideos(prev => prev.filter(video => video._id !== videoId && video.id !== videoId));
   };
 
   return { videos, loading, addVideo, deleteVideo, refetch: fetchVideos };

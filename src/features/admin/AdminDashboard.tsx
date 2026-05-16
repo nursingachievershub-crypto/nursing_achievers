@@ -252,8 +252,7 @@ export const AdminDashboard = () => {
     setQuizForm(f => ({ ...f, questions: f.questions.map((q, i) => i === qi ? { ...q, options: q.options.map((o, j) => j === oi ? val : o) } : q) }));
 
   const handleJsonUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const n e) return;
     const reader = new FileReader();
     reader.onload = async (ev) => {
       try {
@@ -314,10 +313,8 @@ export const AdminDashboard = () => {
       } catch (err: unknown) {
         setJsonError(err instanceof Error ? err.message : 'Invalid JSON format.');
       } finally {
-        e.target.value = ''; // Reset input so the same file can be uploaded again
-      }
+        inputElem
     };
-    reader.readAsText(file);
   };
 
   const handleSaveQuiz = async () => {

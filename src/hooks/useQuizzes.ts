@@ -24,7 +24,7 @@ export function useQuizzes() {
 
   const deleteQuiz = async (id: string) => {
     await quizzesAPI.delete(id);
-    setQuizzes(prev => prev.filter(q => q._id !== id));
+    setQuizzes(prev => prev.filter(q => q._id !== id && q.id !== id));
   };
 
   return { quizzes, loading, addQuiz, deleteQuiz, refetch: fetchQuizzes };
