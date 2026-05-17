@@ -140,6 +140,8 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
   const [activeQuiz, setActiveQuiz] = useState<any>(null);
   const [quizAnswers, setQuizAnswers] = useState<number[]>([]);
   const [quizResult, setQuizResult] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   // Handle window resize for mobile responsiveness
   useEffect(() => {
@@ -206,24 +208,37 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
     setActiveQuiz(quiz);
     setQuizAnswers(new Array(quiz.questions.length).fill(-1));
     setQuizResult(null);
+    setSubmitError('');
   };
 
   const handleSubmitQuiz = async () => {
     try {
-      const response = await fetch('/api/quizzes?action=submit', {
+      setIsSubmitting(true);
+      setSubmitError('');
+      const API_URL = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${API_URL}/api/quizzes?action=submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           quizId: activeQuiz._id || activeQuiz.id,
-          userId: user?.email,
-          userEmail: user?.email,
+          userId: user?.email || 'unknown',
+          userEmail: user?.email || 'unknown',
           answers: quizAnswers
         })
       });
+      
+      if (!response.ok) {
+         const errData = await response.json().catch(() => ({}));
+         throw new Error(errData.error || 'Failed to submit quiz');
+      }
+      
       const result = await response.json();
       setQuizResult(result);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to submit quiz", err);
+      setSubmitError(err?.message || 'Error connecting to server. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -706,13 +721,18 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
                     </div>
                   ))}
                   
+                  {submitError && (
+                    <div style={{ color: '#ef4444', fontSize: '13px', fontWeight: '600', marginBottom: '12px', textAlign: 'right' }}>
+                      ⚠ {submitError}
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
                     <button 
                       onClick={handleSubmitQuiz}
-                      disabled={quizAnswers.includes(-1)}
-                      style={{ padding: '14px 32px', background: quizAnswers.includes(-1) ? '#cbd5e1' : 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '15px', cursor: quizAnswers.includes(-1) ? 'not-allowed' : 'pointer', boxShadow: quizAnswers.includes(-1) ? 'none' : '0 4px 14px rgba(37,99,235,0.3)' }}
+                      disabled={quizAnswers.includes(-1) || isSubmitting}
+                      style={{ padding: '14px 32px', background: (quizAnswers.includes(-1) || isSubmitting) ? '#cbd5e1' : 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '15px', cursor: (quizAnswers.includes(-1) || isSubmitting) ? 'not-allowed' : 'pointer', boxShadow: (quizAnswers.includes(-1) || isSubmitting) ? 'none' : '0 4px 14px rgba(37,99,235,0.3)' }}
                     >
-                      Submit Quiz
+                      {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
                     </button>
                   </div>
                 </div>
