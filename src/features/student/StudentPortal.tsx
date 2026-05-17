@@ -215,8 +215,7 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
     try {
       setIsSubmitting(true);
       setSubmitError('');
-      const API_URL = import.meta.env.VITE_API_URL || '';
-      const response = await fetch(`${API_URL}/api/quizzes?action=submit`, {
+      const response = await fetch('/api/quizzes?action=submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -729,8 +728,8 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
                   <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
                     <button 
                       onClick={handleSubmitQuiz}
-                      disabled={quizAnswers.includes(-1) || isSubmitting}
-                      style={{ padding: '14px 32px', background: (quizAnswers.includes(-1) || isSubmitting) ? '#cbd5e1' : 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '15px', cursor: (quizAnswers.includes(-1) || isSubmitting) ? 'not-allowed' : 'pointer', boxShadow: (quizAnswers.includes(-1) || isSubmitting) ? 'none' : '0 4px 14px rgba(37,99,235,0.3)' }}
+                      disabled={isSubmitting}
+                      style={{ padding: '14px 32px', background: isSubmitting ? '#cbd5e1' : 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '15px', cursor: isSubmitting ? 'not-allowed' : 'pointer', boxShadow: isSubmitting ? 'none' : '0 4px 14px rgba(37,99,235,0.3)' }}
                     >
                       {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
                     </button>
