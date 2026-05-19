@@ -196,7 +196,7 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
   );
 
   const enrolledCourseIds = courses
-    .filter(c => approvedCourseTitles.has(c.title))
+    .filter(c => approvedCourseTitles.has(c.title) || approvedCourseTitles.has(`${c.title} (1st EMI)`))
     .map(c => c._id || c.id);
 
   const isEnrolled = enrolledCourseIds.length > 0;
@@ -576,36 +576,56 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
                           </>
                         )}
                       </div>
-                      {approvedCourseTitles.has(course.title) ? (
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button
-                            onClick={() => handleNavClick('Video Lectures')}
-                            style={{ flex: 1, padding: '12px', background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(5,150,105,0.3)' }}
-                          >
-                            ▶ Videos
-                          </button>
-                          <button
-                            onClick={() => handleNavClick('Mock Tests')}
-                            style={{ flex: 1, padding: '12px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' }}
-                          >
-                            📝 Quizzes
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => onEnroll({ title: course.title, price: course.price })}
-                          style={{
-                            width: '100%', padding: '13px',
-                            background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                            color: '#fff', border: 'none', borderRadius: '10px',
-                            fontWeight: '700', fontSize: '14px', cursor: 'pointer',
-                            boxShadow: '0 5px 16px rgba(37,99,235,0.35)',
-                            letterSpacing: '0.3px',
-                          }}
-                        >
-                          Enroll Now →
-                        </button>
-                      )}
+                      {(() => {
+                        const hasFullAccess = approvedCourseTitles.has(course.title);
+                        const hasFirstEmi = approvedCourseTitles.has(`${course.title} (1st EMI)`);
+                        const hasSecondEmi = approvedCourseTitles.has(`${course.title} (2nd EMI)`);
+                        
+                        const isEnrolledInCourse = hasFullAccess || hasFirstEmi;
+                        const needsSecondEmi = hasFirstEmi && !hasSecondEmi && !hasFullAccess;
+
+                        return isEnrolledInCourse ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <button
+                                onClick={() => handleNavClick('Video Lectures')}
+                                style={{ flex: 1, padding: '12px', background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(5,150,105,0.3)' }}
+                              >
+                                ▶ Videos
+                              </button>
+                              <button
+                                onClick={() => handleNavClick('Mock Tests')}
+                                style={{ flex: 1, padding: '12px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' }}
+                              >
+                                📝 Quizzes
+                              </button>
+                            </div>
+                            {needsSecondEmi && (
+                              <button
+                                onClick={() => onEnroll({ title: `${course.title} (2nd EMI)`, price: course.price / 2 })}
+                                style={{ width: '100%', padding: '10px', background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', borderRadius: '8px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
+                              >
+                                ⚠ Pay 2nd EMI (₹{(course.price / 2).toLocaleString()})
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
+                            <button
+                              onClick={() => onEnroll({ title: course.title, price: course.price })}
+                              style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 5px 16px rgba(37,99,235,0.35)' }}
+                            >
+                              Pay in Full (₹{course.price.toLocaleString()})
+                            </button>
+                            <button
+                              onClick={() => onEnroll({ title: `${course.title} (1st EMI)`, price: course.price / 2 })}
+                              style={{ width: '100%', padding: '12px', background: '#f8fafc', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
+                            >
+                              Pay 1st EMI (₹{(course.price / 2).toLocaleString()})
+                            </button>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}
