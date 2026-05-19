@@ -663,7 +663,7 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
                   <div style={{ textAlign: 'left', marginTop: '20px' }}>
                     <h4 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>Review Answers:</h4>
                     {activeQuiz.questions.map((q: any, i: number) => {
-                      const isCorrect = quizAnswers[i] === q.answer;
+                      const isCorrect = Number(quizAnswers[i]) === Number(q.answer);
                       return (
                         <div key={i} style={{ marginBottom: '24px', padding: '20px', borderRadius: '12px', background: isCorrect ? '#f0fdf4' : '#fef2f2', border: `1px solid ${isCorrect ? '#bbf7d0' : '#fecaca'}` }}>
                           <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', margin: '0 0 16px', lineHeight: 1.5 }}>
@@ -682,12 +682,12 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
                               let optColor = '#334155';
                               let optIcon = '';
 
-                              if (oi === q.answer) {
+                              if (Number(oi) === Number(q.answer)) {
                                 optBg = '#dcfce7';
                                 optBorder = '#86efac';
                                 optColor = '#166534';
                                 optIcon = ' ✓';
-                              } else if (oi === quizAnswers[i]) {
+                              } else if (Number(oi) === Number(quizAnswers[i])) {
                                 optBg = '#fee2e2';
                                 optBorder = '#fca5a5';
                                 optColor = '#991b1b';
@@ -698,24 +698,28 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
                                 <div key={oi} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', background: optBg, border: `1px solid ${optBorder}`, borderRadius: '10px' }}>
                                   <div style={{ 
                                     width: '18px', height: '18px', borderRadius: '50%', 
-                                    border: `2px solid ${oi === q.answer ? '#166534' : oi === quizAnswers[i] ? '#991b1b' : '#cbd5e1'}`, 
+                                    border: `2px solid ${Number(oi) === Number(q.answer) ? '#166534' : Number(oi) === Number(quizAnswers[i]) ? '#991b1b' : '#cbd5e1'}`, 
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                                    background: oi === q.answer ? '#166534' : oi === quizAnswers[i] ? '#991b1b' : 'transparent'
+                                    background: Number(oi) === Number(q.answer) ? '#166534' : Number(oi) === Number(quizAnswers[i]) ? '#991b1b' : 'transparent'
                                   }}>
-                                    {(oi === q.answer || oi === quizAnswers[i]) && (
+                                    {(Number(oi) === Number(q.answer) || Number(oi) === Number(quizAnswers[i])) && (
                                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fff' }} />
                                     )}
                                   </div>
-                                  <span style={{ fontSize: '14px', color: optColor, fontWeight: oi === q.answer || oi === quizAnswers[i] ? '600' : '500' }}>
+                                  <span style={{ fontSize: '14px', color: optColor, fontWeight: Number(oi) === Number(q.answer) || Number(oi) === Number(quizAnswers[i]) ? '600' : '500' }}>
                                     {opt}{optIcon}
                                   </span>
                                 </div>
                               );
                             })}
                           </div>
-                          {q.explanation && (
+                          {q.explanation ? (
                             <div style={{ marginTop: '16px', fontSize: '13px', color: '#475569', background: 'rgba(255,255,255,0.7)', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                               <strong style={{ color: '#1e293b' }}>💡 Explanation:</strong> <br/> {q.explanation}
+                            </div>
+                          ) : (
+                            <div style={{ marginTop: '16px', fontSize: '13px', color: '#94a3b8', fontStyle: 'italic', padding: '12px', background: 'rgba(255,255,255,0.4)', borderRadius: '8px' }}>
+                              No explanation provided for this question.
                             </div>
                           )}
                         </div>
