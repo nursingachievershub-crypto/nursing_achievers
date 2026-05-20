@@ -173,7 +173,7 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
           ...c,
           gradient: c.gradient || GRADIENTS[i % GRADIENTS.length].gradient,
           accentColor: c.accentColor || GRADIENTS[i % GRADIENTS.length].accentColor,
-          rating: c.rating || 4.5 + Math.random() * 0.4,
+          rating: Number((c.rating || 4.5 + Math.random() * 0.4).toFixed(1)),
           reviews: c.reviews || Math.floor(500 + Math.random() * 1000),
         })));
       }
@@ -554,7 +554,7 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
                         {course.description}
                       </p>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '800', color: '#92400e' }}>{course.rating}</span>
+                        <span style={{ fontSize: '13px', fontWeight: '800', color: '#92400e' }}>{Number(course.rating).toFixed(1)}</span>
                         <StarRating rating={course.rating} />
                         <span style={{ fontSize: '11px', color: '#94a3b8' }}>({course.reviews.toLocaleString()})</span>
                       </div>

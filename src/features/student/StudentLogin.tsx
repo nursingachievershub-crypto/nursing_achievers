@@ -182,26 +182,6 @@ export const StudentLogin = () => {
               </div>
             )}
 
-            {/* Feature list */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '24px 0 16px' }}>
-              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
-              <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: '11.5px', fontWeight: '500' }}>What you get</span>
-              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '28px' }}>
-              {[
-                { icon: '🎥', text: '120+ HD Video Lectures for NORCET 11' },
-                { icon: '📚', text: 'Premium Study Notes & PDFs' },
-                { icon: '🧠', text: 'Daily MCQ Quizzes & Mock Tests' },
-                { icon: '📈', text: 'Track your exam progress' },
-              ].map(f => (
-                <div key={f.text} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ fontSize: '15px', flexShrink: 0 }}>{f.icon}</span>
-                  <span style={{ fontSize: '12.5px', color: 'rgba(255,255,255,0.5)', fontWeight: '500' }}>{f.text}</span>
-                </div>
-              ))}
-            </div>
-
             <div style={{ textAlign: 'center' }}>
               <button
                 onClick={() => { setShowAdminForm(true); setError(''); }}
