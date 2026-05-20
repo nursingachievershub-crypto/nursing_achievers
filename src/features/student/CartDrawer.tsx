@@ -60,7 +60,7 @@ export const CartDrawer = ({ isOpen, onClose, items, onRemove, onProceed }: Cart
                     {item.title}
                   </p>
                   <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#64748b' }}>
-                    By Nursing Achievers
+                    By Achievers Hub
                   </p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '15px', fontWeight: '800', color: '#1e293b' }}>

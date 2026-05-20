@@ -353,7 +353,7 @@ export const AdminDashboard = () => {
           </div>
           {isNavOpen && (
             <div>
-              <div style={{ fontSize: '13.5px', fontWeight: '800', color: '#f1f5f9', letterSpacing: '0.4px', lineHeight: 1.2 }}>NURSING ACHIEVERS</div>
+              <div style={{ fontSize: '13.5px', fontWeight: '800', color: '#f1f5f9', letterSpacing: '0.4px', lineHeight: 1.2 }}>ACHIEVERS HUB</div>
               <div style={{ fontSize: '10px', color: '#475569', fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase', marginTop: '3px' }}>Admin Panel</div>
             </div>
           )}

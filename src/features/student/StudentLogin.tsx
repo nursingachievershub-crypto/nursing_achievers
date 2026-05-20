@@ -112,7 +112,7 @@ export const StudentLogin = () => {
             <span style={{ color: '#fff', fontWeight: '900', fontSize: '20px', letterSpacing: '-1.5px' }}>NA</span>
           </div>
           <h1 style={{ color: '#f1f5f9', fontSize: '22px', fontWeight: '900', margin: '0 0 6px', letterSpacing: '-0.4px' }}>
-            Nursing Achievers
+            Achievers Hub
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', margin: 0, fontWeight: '500' }}>
             India's Premier Nursing Exam Platform
