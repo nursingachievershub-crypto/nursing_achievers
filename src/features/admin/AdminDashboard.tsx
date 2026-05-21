@@ -1213,14 +1213,6 @@ export const AdminDashboard = () => {
             {quizMode === 'json' && (
               <div>
                 <div style={{ marginBottom: '16px' }}>
-                  <label style={labelStyle}>Course * <span style={{ color: '#94a3b8', fontWeight: '400' }}>(Required)</span></label>
-                  <select value={quizForm.course} onChange={e => setQuizForm(f => ({ ...f, course: e.target.value }))} style={inputStyle}>
-                    <option value="">Select Course</option>
-                    {courses.map(c => <option key={c._id || c.id} value={c._id || c.id}>{c.title}</option>)}
-                  </select>
-                </div>
-
-                <div style={{ marginBottom: '16px' }}>
                   <label style={labelStyle}>Upload Quiz JSON File</label>
                   <label htmlFor="quizJsonInput" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '24px 16px', border: '2px dashed #cbd5e1', borderRadius: '10px', background: '#f8fafc', cursor: 'pointer' }}>
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
