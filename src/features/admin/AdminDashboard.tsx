@@ -591,8 +591,8 @@ export const AdminDashboard = () => {
                         <span style={{ fontSize: '12px', color: '#64748b', marginRight: '8px' }}>₹{n.price.toLocaleString()}</span>
                         <span style={tagStyle('#f5f3ff', '#7c3aed')}>PDF</span>
                         {n.fileUrl && (
-                          <a href={n.fileUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '5px 12px', background: '#f5f3ff', color: '#7c3aed', border: '1px solid #ddd6fe', borderRadius: '6px', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>
-                            Open
+                          <a href={n.fileUrl} download={n.fileName || 'document'} target="_blank" rel="noopener noreferrer" style={{ padding: '5px 12px', background: '#f5f3ff', color: '#7c3aed', border: '1px solid #ddd6fe', borderRadius: '6px', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>
+                            Download
                           </a>
                         )}
                         <button onClick={async (e) => { e.stopPropagation(); try { if (deleteNote) await deleteNote(n._id || n.id); } catch(err) { console.error(err); } }} style={deleteBtn}>Delete</button>

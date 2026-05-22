@@ -861,8 +861,8 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
                       {courses.find(c => (c._id || c.id) === note.courseId)?.title || 'Course Note'}
                     </span>
                     {note.fileUrl ? (
-                      <a href={note.fileUrl} target="_blank" rel="noopener noreferrer" style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px', textDecoration: 'none', display: 'inline-block', boxSizing: 'border-box', boxShadow: '0 4px 14px rgba(124,58,237,0.3)' }}>
-                        Open Document →
+                      <a href={note.fileUrl} download={note.fileName || 'Document'} target="_blank" rel="noopener noreferrer" style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px', textDecoration: 'none', display: 'inline-block', boxSizing: 'border-box', boxShadow: '0 4px 14px rgba(124,58,237,0.3)' }}>
+                        Download Document →
                       </a>
                     ) : (
                       <button disabled style={{ width: '100%', padding: '12px', background: '#e2e8f0', color: '#94a3b8', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px' }}>
