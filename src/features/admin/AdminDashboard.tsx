@@ -121,7 +121,7 @@ export const AdminDashboard = () => {
   // ── API hooks (MongoDB-backed) ──
   const { courses, addCourse, updateCourse, deleteCourse } = useCourses();
   const { videos, addVideo, deleteVideo } = useVideos();
-  const { notes, addNote } = useNotes();
+  const { notes, addNote, deleteNote } = useNotes();
   const { quizzes, addQuiz, deleteQuiz } = useQuizzes();
   const { analytics } = useAnalytics();
 
@@ -585,11 +585,17 @@ export const AdminDashboard = () => {
                     </div>
                   ) : (
                     notes.filter(n => n.courseId === (selectedCourse._id || selectedCourse.id)).map((n) => (
-                      <div key={n.id} style={lessonRow}>
+                      <div key={n._id || n.id} style={lessonRow}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
                         <span style={{ flex: 1, fontSize: '14px', color: '#1e293b' }}>{n.title}</span>
                         <span style={{ fontSize: '12px', color: '#64748b', marginRight: '8px' }}>₹{n.price.toLocaleString()}</span>
                         <span style={tagStyle('#f5f3ff', '#7c3aed')}>PDF</span>
+                        {n.fileUrl && (
+                          <a href={n.fileUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '5px 12px', background: '#f5f3ff', color: '#7c3aed', border: '1px solid #ddd6fe', borderRadius: '6px', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>
+                            Open
+                          </a>
+                        )}
+                        <button onClick={async (e) => { e.stopPropagation(); try { if (deleteNote) await deleteNote(n._id || n.id); } catch(err) { console.error(err); } }} style={deleteBtn}>Delete</button>
                       </div>
                     ))
                   )}
@@ -985,8 +991,11 @@ export const AdminDashboard = () => {
                 onChange={e => {
                   const file = e.target.files?.[0];
                   if (!file) return;
-                  const url = URL.createObjectURL(file);
-                  setNoteForm({ ...noteForm, fileName: file.name, fileSize: formatFileSize(file.size), fileUrl: url });
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    setNoteForm({ ...noteForm, fileName: file.name, fileSize: formatFileSize(file.size), fileUrl: reader.result as string });
+                  };
+                  reader.readAsDataURL(file);
                 }}
               />
             </div>
