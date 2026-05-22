@@ -211,6 +211,41 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
     setSubmitError('');
   };
 
+  const handleDownload = (fileUrl: string, fileName: string) => {
+    try {
+      if (fileUrl.startsWith('data:')) {
+        // Convert base64 to raw binary data held in a string
+        const arr = fileUrl.split(',');
+        const mime = arr[0].match(/:(.*?);/)?.[1] || '';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while(n--) { u8arr[n] = bstr.charCodeAt(n); }
+        
+        // Create a blob and temporary URL to bypass browser security blocks
+        const blob = new Blob([u8arr], {type: mime});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName || 'Document';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } else {
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = fileName || 'Document';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (err) {
+      console.error('Download failed', err);
+      alert('Failed to download the file. Please try again.');
+    }
+  };
+
   const handleSubmitQuiz = async () => {
     try {
       setIsSubmitting(true);
@@ -861,9 +896,9 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
                       {courses.find(c => (c._id || c.id) === note.courseId)?.title || 'Course Note'}
                     </span>
                     {note.fileUrl ? (
-                      <a href={note.fileUrl} download={note.fileName || 'Document'} target="_blank" rel="noopener noreferrer" style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px', textDecoration: 'none', display: 'inline-block', boxSizing: 'border-box', boxShadow: '0 4px 14px rgba(124,58,237,0.3)' }}>
+                      <button onClick={() => handleDownload(note.fileUrl, note.fileName)} style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', boxShadow: '0 4px 14px rgba(124,58,237,0.3)' }}>
                         Download Document →
-                      </a>
+                      </button>
                     ) : (
                       <button disabled style={{ width: '100%', padding: '12px', background: '#e2e8f0', color: '#94a3b8', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px' }}>
                         Processing...

@@ -337,6 +337,40 @@ export const AdminDashboard = () => {
     updatePaymentStatus(id, action);
   };
 
+  const handleDownload = (e: React.MouseEvent, fileUrl: string, fileName: string) => {
+    e.stopPropagation();
+    try {
+      if (fileUrl.startsWith('data:')) {
+        const arr = fileUrl.split(',');
+        const mime = arr[0].match(/:(.*?);/)?.[1] || '';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while(n--) { u8arr[n] = bstr.charCodeAt(n); }
+        
+        const blob = new Blob([u8arr], {type: mime});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName || 'Document';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } else {
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = fileName || 'Document';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (err) {
+      console.error('Download failed', err);
+      alert('Failed to download the file.');
+    }
+  };
+
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: '#f8fafc', fontFamily: "'Inter', sans-serif" }}>
 
@@ -591,10 +625,8 @@ export const AdminDashboard = () => {
                         <span style={{ fontSize: '12px', color: '#64748b', marginRight: '8px' }}>₹{n.price.toLocaleString()}</span>
                         <span style={tagStyle('#f5f3ff', '#7c3aed')}>PDF</span>
                         {n.fileUrl && (
-                          <a href={n.fileUrl} download={n.fileName || 'document'} target="_blank" rel="noopener noreferrer" style={{ padding: '5px 12px', background: '#f5f3ff', color: '#7c3aed', border: '1px solid #ddd6fe', borderRadius: '6px', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>
-                            Download
-                          </a>
-                        )}
+                          < Download
+                          </button>
                         <button onClick={async (e) => { e.stopPropagation(); try { if (deleteNote) await deleteNote(n._id || n.id); } catch(err) { console.error(err); } }} style={deleteBtn}>Delete</button>
                       </div>
                     ))
