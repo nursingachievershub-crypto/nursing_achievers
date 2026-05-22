@@ -142,6 +142,7 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
   const [quizResult, setQuizResult] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [pdfPreview, setPdfPreview] = useState<{ url: string, name: string } | null>(null);
 
   // Handle window resize for mobile responsiveness
   useEffect(() => {
@@ -243,6 +244,26 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
     } catch (err) {
       console.error('Download failed', err);
       alert('Failed to download the file. Please try again.');
+    }
+  };
+
+  const handlePreview = (fileUrl: string, fileName: string) => {
+    try {
+      if (fileUrl.startsWith('data:')) {
+        const arr = fileUrl.split(',');
+        const mime = arr[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while(n--) { u8arr[n] = bstr.charCodeAt(n); }
+        const blob = new Blob([u8arr], {type: mime});
+        setPdfPreview({ url: URL.createObjectURL(blob), name: fileName });
+      } else {
+        setPdfPreview({ url: fileUrl, name: fileName });
+      }
+    } catch (err) {
+      console.error('Preview failed', err);
+      alert('Failed to preview the document.');
     }
   };
 
@@ -896,9 +917,14 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
                       {courses.find(c => (c._id || c.id) === note.courseId)?.title || 'Course Note'}
                     </span>
                     {note.fileUrl ? (
-                      <button onClick={() => handleDownload(note.fileUrl, note.fileName)} style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', boxShadow: '0 4px 14px rgba(124,58,237,0.3)' }}>
-                        Download Document →
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                        <button onClick={() => handlePreview(note.fileUrl, note.fileName)} style={{ flex: 1, padding: '10px', background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 4px 14px rgba(124,58,237,0.3)' }}>
+                          👁 View
+                        </button>
+                        <button onClick={() => handleDownload(note.fileUrl, note.fileName)} style={{ flex: 1, padding: '10px', background: '#f8fafc', color: '#7c3aed', border: '1px solid #ddd6fe', borderRadius: '8px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>
+                          ↓ Download
+                        </button>
+                      </div>
                     ) : (
                       <button disabled style={{ width: '100%', padding: '12px', background: '#e2e8f0', color: '#94a3b8', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px' }}>
                         Processing...
@@ -964,6 +990,32 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
           )}
         </div>
       </main>
+
+      {/* ── IN-APP PDF VIEWER MODAL ── */}
+      {pdfPreview && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', background: '#0f172a', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <h3 style={{ margin: 0, color: '#f8fafc', fontSize: '15px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '60%' }}>
+              📄 {pdfPreview.name}
+            </h3>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => handleDownload(pdfPreview.url, pdfPreview.name)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+                ↓ Download
+              </button>
+              <button onClick={() => { 
+                  if (pdfPreview.url.startsWith('blob:')) URL.revokeObjectURL(pdfPreview.url); 
+                  setPdfPreview(null); 
+                }} 
+                style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+                ✕ Close
+              </button>
+            </div>
+          </div>
+          <div style={{ flex: 1, width: '100%', height: '100%', background: '#cbd5e1' }}>
+            <iframe src={`${pdfPreview.url}#view=FitH`} style={{ width: '100%', height: '100%', border: 'none' }} title={pdfPreview.name} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
