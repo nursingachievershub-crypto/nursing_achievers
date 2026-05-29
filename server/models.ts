@@ -54,10 +54,12 @@ export const Note = mongoose.models.Note || mongoose.model('Note', NoteSchema);
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
 const QuizQuestionSchema = new Schema({
   questionText: { type: String, required: true },
+  questionImage:{ type: String, default: '' },
   questionCode: { type: String, default: '' },
   topicType:    { type: String, default: '' },
   options:      [{ type: String }],
   answer:       { type: Number, default: 0 },
+  explanation:  { type: String, default: '' },
 }, { _id: false });
 
 const QuizSchema = new Schema({

@@ -281,6 +281,7 @@ export const AdminDashboard = () => {
             questions: questionsRaw.map((q: any, i: number) => ({
               id: `json-${Date.now()}-${i}`,
               questionText: typeof q.questionText === 'string' ? q.questionText : String(q.question || ''),
+              questionImage: typeof q.questionImage === 'string' ? q.questionImage : '',
               questionCode: typeof q.questionCode === 'string' ? q.questionCode : '',
               topicType: typeof q.topicType === 'string' ? q.topicType : '',
               options: Array.isArray(q.options) ? q.options.map(String) : ['', '', '', ''],
@@ -1275,6 +1276,7 @@ export const AdminDashboard = () => {
   "questions": [
     {
       "question": "What is normal blood pressure?",
+      "questionImage": "https://example.com/image.png",
       "questionCode": "// optional code snippet",
       "questionLanguage": "javascript",
       "options": [
@@ -1293,6 +1295,7 @@ export const AdminDashboard = () => {
                   <div style={{ fontWeight: '700', color: '#d97706', fontSize: '13px', marginBottom: '8px' }}>📌 Notes:</div>
                   <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '12px', color: '#92400e', lineHeight: 2 }}>
                     <li>Only <code style={{ background: '#fef9c3', padding: '1px 5px', borderRadius: '3px' }}>questionCode</code> is supported for code snippets (not in options).</li>
+                    <li><code style={{ background: '#fef9c3', padding: '1px 5px', borderRadius: '3px' }}>questionImage</code> can be a public URL or a base64 data URI.</li>
                     <li><code style={{ background: '#fef9c3', padding: '1px 5px', borderRadius: '3px' }}>options</code> must be an array of strings.</li>
                     <li><code style={{ background: '#fef9c3', padding: '1px 5px', borderRadius: '3px' }}>answer</code> is the index (0-based) of the correct option.</li>
                   </ul>
