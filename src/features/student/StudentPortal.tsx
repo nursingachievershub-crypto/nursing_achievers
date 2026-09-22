@@ -15,6 +15,21 @@ type NursingAchieversPortalProps = {
 
 const defaultCourses = [
   {
+    title: 'RRB & NORCET 12',
+    price: 1999,
+    originalPrice: 9999,
+    rating: 4.9,
+    reviews: 320,
+    lectures: 50,
+    hours: 22,
+    level: 'All Levels',
+    badge: '🔥 HOT SALE',
+    badgeColor: '#dc2626',
+    description: 'Complete RRB & NORCET 12 preparation — video lectures, mock tests, notes & live sessions at an unbeatable price.',
+    gradient: 'linear-gradient(135deg, #450a0a 0%, #991b1b 55%, #ef4444 100%)',
+    accentColor: '#fca5a5',
+  },
+  {
     title: "ACHIEVERS'S PRIME: NORCET11",
     price: 10000,
     originalPrice: 13000,
@@ -59,6 +74,7 @@ const defaultCourses = [
     gradient: 'linear-gradient(135deg, #042f2e 0%, #065f46 55%, #059669 100%)',
     accentColor: '#6ee7b7',
   },
+
 ];
 
 const FEATURE_CARDS = [
