@@ -44,7 +44,7 @@ export const AdminLogin = () => {
             Admin Portal
           </h1>
           <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
-            Nursing Achievers — Staff Only
+            RNCET — Staff Only
           </p>
         </div>
 

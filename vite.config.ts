@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon-180x180.png'],
       manifest: {
-        name: 'Nursing Achievers',
-        short_name: 'NA Prime',
+        name: 'RNCET',
+        short_name: 'RNCET',
         description: "India's Premier Nursing Exam Preparation Platform",
         theme_color: '#2563eb',
         background_color: '#0f172a',

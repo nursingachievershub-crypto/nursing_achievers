@@ -328,11 +328,11 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 6px 20px rgba(37,99,235,0.45)',
           }}>
-            <span style={{ color: '#fff', fontWeight: '900', fontSize: '15px', letterSpacing: '-1px' }}>NA</span>
+            <span style={{ color: '#fff', fontWeight: '900', fontSize: '15px', letterSpacing: '-1px' }}>RC</span>
           </div>
           {isNavOpen && (
             <div>
-              <div style={{ fontSize: '13.5px', fontWeight: '800', color: '#f1f5f9', letterSpacing: '0.4px', lineHeight: 1.2 }}>ACHIEVERS HUB</div>
+              <div style={{ fontSize: '13.5px', fontWeight: '800', color: '#f1f5f9', letterSpacing: '0.4px', lineHeight: 1.2 }}>RNCET</div>
               <div style={{ fontSize: '10px', color: '#475569', fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase', marginTop: '3px' }}>Learning Portal</div>
             </div>
           )}
@@ -597,7 +597,7 @@ export const NursingAchieversPortal = ({ cartCount, onEnroll, onOpenCart }: Nurs
                         {course.level}
                       </div>
                       <div style={{ position: 'absolute', bottom: '14px', left: '14px', fontSize: '10px', fontWeight: '800', color: course.accentColor, letterSpacing: '0.7px' }}>
-                        ACHIEVERS HUB
+                        RNCET
                       </div>
                     </div>
 

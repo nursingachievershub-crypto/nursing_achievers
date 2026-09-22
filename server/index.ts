@@ -174,9 +174,6 @@ app.get('/api/videos', async (req, res) => {
 
 app.post('/api/videos', requireAdmin, async (req, res) => {
   try {
-    if (!req.body.courseId) {
-      return res.status(400).json({ error: 'courseId is strictly required to upload a video.' });
-    }
     const video = await Video.create(req.body);
     res.status(201).json(video);
   } catch (err: any) { res.status(500).json({ error: err.message }); }
