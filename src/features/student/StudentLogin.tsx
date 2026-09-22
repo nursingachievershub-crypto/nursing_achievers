@@ -109,10 +109,10 @@ export const StudentLogin = () => {
             borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 8px 28px rgba(37,99,235,0.5)',
           }}>
-            <span style={{ color: '#fff', fontWeight: '900', fontSize: '20px', letterSpacing: '-1.5px' }}>NA</span>
+            <span style={{ color: '#fff', fontWeight: '900', fontSize: '20px', letterSpacing: '-1.5px' }}>RC</span>
           </div>
           <h1 style={{ color: '#f1f5f9', fontSize: '22px', fontWeight: '900', margin: '0 0 6px', letterSpacing: '-0.4px' }}>
-            Achievers Hub
+            RNCET
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', margin: 0, fontWeight: '500' }}>
             India's Premier Nursing Exam Platform

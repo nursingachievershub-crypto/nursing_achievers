@@ -266,7 +266,7 @@ export const AdminDashboard = () => {
           let qLevel = '';
           
           if (Array.isArray(quizData)) {
-            questionsRaw = quizData;
+            questionsRaw = quizData; // This is an array of questions
           } else if (typeof quizData === 'object' && quizData !== null && Array.isArray(quizData.questions)) {
             questionsRaw = quizData.questions;
             qTitle = typeof quizData.title === 'string' ? quizData.title : '';
@@ -276,7 +276,7 @@ export const AdminDashboard = () => {
           return {
             title: qTitle || quizForm.title || 'Imported Quiz',
             level: qLevel || quizForm.level,
-            topic: typeof quizData.topic === 'string' ? quizData.topic : quizForm.topic,
+            topic: (typeof quizData.topic === 'string' ? quizData.topic : quizForm.topic) || '',
             courseId: quizForm.course,
             questions: questionsRaw.map((q: any, i: number) => ({
               id: `json-${Date.now()}-${i}`,
@@ -311,7 +311,7 @@ export const AdminDashboard = () => {
         const parsed = processQuiz(data);
         if (!parsed.questions.length) throw new Error('No questions found in JSON.');
         
-        setQuizForm(f => ({ ...f, ...parsed }));
+        setQuizForm(f => ({ ...f, ...parsed, course: f.course })); // Preserve existing course selection
         setJsonError('');
       } catch (err: unknown) {
         setJsonError(err instanceof Error ? err.message : 'Invalid JSON format.');
@@ -384,11 +384,11 @@ export const AdminDashboard = () => {
         {/* Logo */}
         <div style={{ padding: isNavOpen ? '26px 20px 22px' : '26px 0 22px', display: 'flex', alignItems: 'center', justifyContent: isNavOpen ? 'flex-start' : 'center', gap: '14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ width: '42px', height: '42px', flexShrink: 0, background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 20px rgba(37,99,235,0.45)' }}>
-            <span style={{ color: '#fff', fontWeight: '900', fontSize: '15px', letterSpacing: '-1px' }}>NA</span>
+            <span style={{ color: '#fff', fontWeight: '900', fontSize: '15px', letterSpacing: '-1px' }}>RC</span>
           </div>
           {isNavOpen && (
             <div>
-              <div style={{ fontSize: '13.5px', fontWeight: '800', color: '#f1f5f9', letterSpacing: '0.4px', lineHeight: 1.2 }}>ACHIEVERS HUB</div>
+              <div style={{ fontSize: '13.5px', fontWeight: '800', color: '#f1f5f9', letterSpacing: '0.4px', lineHeight: 1.2 }}>RNCET</div>
               <div style={{ fontSize: '10px', color: '#475569', fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase', marginTop: '3px' }}>Admin Panel</div>
             </div>
           )}
